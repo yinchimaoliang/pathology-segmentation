@@ -5,8 +5,8 @@ from pathseg.datasets.builder import PIPELINES
 @PIPELINES.register_module()
 class Loading(object):
 
-    def __init__(self, ):
-        pass
+    def __init__(self, shape=None):
+        self.shape = shape
 
     def __call__(self, results):
         img_path = results['img_path']
@@ -15,6 +15,10 @@ class Loading(object):
         img = cv.imread(img_path)
         ann = cv.imread(ann_path, 0)
 
+        if self.shape is not None:
+            img = cv.resize(img, self.shape)
+            ann = cv.resize(ann, self.shape)
+
         results['image'] = img
         results['annotation'] = ann
 
@@ -22,8 +26,5 @@ class Loading(object):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += '(shift_height={})'.format(self.shift_height)
-        repr_str += '(mean_color={})'.format(self.color_mean)
-        repr_str += '(load_dim={})'.format(self.load_dim)
-        repr_str += '(use_dim={})'.format(self.use_dim)
+        repr_str += '(shape={})'.format(self.shape)
         return repr_str

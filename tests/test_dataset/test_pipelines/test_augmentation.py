@@ -1,10 +1,10 @@
 import cv2 as cv
 import numpy as np
-from pathseg.datasets.pipelines import Flip, ShiftScaleRotate
+from pathseg.datasets.pipelines import Flip, RandomRotate90, ShiftScaleRotate
 
 
 def test_flip():
-    flip = Flip(1, 1)
+    flip = Flip(1, 1, 1)
 
     img = np.array([[[1, 1, 1], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]]],
                    dtype=np.uint8)
@@ -34,6 +34,23 @@ def test_shift_scale_rotate():
     results = dict(image=img, annotation=ann)
 
     results = shift_scale_rotate(results)
+
+    img = results['image']
+    ann = results['annotation']
+
+    assert img.shape == (5736, 3538, 3)
+    assert ann.shape == (5736, 3538)
+
+
+def test_random_rotate90():
+    np.random.seed(0)
+    random_rotate90 = RandomRotate90(1.)
+    img = cv.imread('./tests/data/images/test.png')
+    ann = cv.imread('./tests/data/annotations/test.png', 0)
+
+    results = dict(image=img, annotation=ann)
+
+    results = random_rotate90(results)
 
     img = results['image']
     ann = results['annotation']

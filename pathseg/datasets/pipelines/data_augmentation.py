@@ -6,7 +6,11 @@ from pathseg.datasets.builder import PIPELINES
 @PIPELINES.register_module()
 class Flip(object):
 
-    def __init__(self, flip_ratio_horizontal, flip_ratio_vertical):
+    def __init__(self,
+                 prob=.5,
+                 flip_ratio_horizontal=.5,
+                 flip_ratio_vertical=.5):
+        self.prob = prob
         self.flip_ratio_horizontal = flip_ratio_horizontal
         self.flip_ratio_vertical = flip_ratio_vertical
 
@@ -14,23 +18,25 @@ class Flip(object):
         img = results['image']
         ann = results['annotation']
 
-        if np.random.random() < self.flip_ratio_horizontal:
-            img = np.ascontiguousarray(img[:, ::-1, ...])
-            ann = np.ascontiguousarray(ann[:, ::-1, ...])
-            results['flip_horizontal'] = True
+        if np.random.random() < self.prob:
+            if np.random.random() < self.flip_ratio_horizontal:
+                img = np.ascontiguousarray(img[:, ::-1, ...])
+                ann = np.ascontiguousarray(ann[:, ::-1, ...])
+                results['flip_horizontal'] = True
 
-        if np.random.random() < self.flip_ratio_vertical:
-            img = np.ascontiguousarray(img[::-1, ...])
-            ann = np.ascontiguousarray(ann[::-1, ...])
-            results['flip_ratio_vertical'] = True
+            if np.random.random() < self.flip_ratio_vertical:
+                img = np.ascontiguousarray(img[::-1, ...])
+                ann = np.ascontiguousarray(ann[::-1, ...])
+                results['flip_ratio_vertical'] = True
 
-        results['image'] = img
-        results['annotation'] = ann
+            results['image'] = img
+            results['annotation'] = ann
 
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
+        repr_str += '(prob={})'.format(self.prob)
         repr_str += '(flip_ratio_horizontal={})'.format(
             self.flip_ratio_horizontal)
         repr_str += '(flip_ratio_vertical={})'.format(self.flip_ratio_vertical)
@@ -126,6 +132,33 @@ class ShiftScaleRotate(object):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
+        repr_str += '(prob={})'.format(self.prob)
         repr_str += '(rotate_range={})'.format(self.rotate_range)
         repr_str += '(scale_range={})'.format(self.scale_range)
+        return repr_str
+
+
+@PIPELINES.register_module()
+class RandomRotate90(object):
+
+    def __init__(self, prob=.5):
+        self.prob = prob
+
+    def __call__(self, results):
+        img = results['image']
+        ann = results['annotation']
+
+        factor = np.random.randint(0, 3)
+
+        img = np.ascontiguousarray(np.rot90(img, factor))
+        ann = np.ascontiguousarray(np.rot90(ann, factor))
+
+        results['image'] = img
+        results['annotation'] = ann
+
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += '(prob={})'.format(self.prob)
         return repr_str

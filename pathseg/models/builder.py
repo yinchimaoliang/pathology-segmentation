@@ -4,6 +4,7 @@ from torch import nn
 BACKBONES = Registry('backbone')
 ENCODERS = Registry('encoder')
 DECODERS = Registry('decoder')
+SEGMENTERS = Registry('segmenter')
 
 
 def build(cfg, registry, default_args=None):
@@ -25,4 +26,8 @@ def build_encoder(cfg):
 
 
 def build_decoder(cfg):
-    return build_decoder(cfg)
+    return build(cfg, DECODERS)
+
+
+def build_segmenter(cfg):
+    return build(cfg, SEGMENTERS)

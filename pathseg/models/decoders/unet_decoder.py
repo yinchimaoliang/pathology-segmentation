@@ -2,8 +2,10 @@ import torch.nn as nn
 
 from pathseg.core.base.model import Model
 from pathseg.core.common.blocks import CenterBlock, DecoderBlock
+from ..builder import DECODERS
 
 
+@DECODERS.register_module()
 class UnetDecoder(Model):
 
     def __init__(self,

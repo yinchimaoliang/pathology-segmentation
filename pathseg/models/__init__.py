@@ -1,1 +1,5 @@
-from .backbones import *  # noqa: F401,F403
+from .backbones import *  # noqa: F403, F401
+from .builder import BACKBONES, ENCODERS
+from .encoders import *  # noqa: F403, F401
+
+__all__ = ['BACKBONES', 'ENCODERS']

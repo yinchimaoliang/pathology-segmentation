@@ -2,6 +2,7 @@ from mmcv.utils import Registry, build_from_cfg
 from torch import nn
 
 BACKBONES = Registry('backbone')
+ENCODERS = Registry('encoder')
 
 
 def build(cfg, registry, default_args=None):
@@ -16,3 +17,7 @@ def build(cfg, registry, default_args=None):
 
 def build_backbone(cfg):
     return build(cfg, BACKBONES)
+
+
+def build_encoder(cfg):
+    return build(cfg, ENCODERS)

@@ -3,7 +3,7 @@ from pretrainedmodels.models.torchvision_models import pretrained_settings
 from torchvision.models.resnet import BasicBlock, Bottleneck
 from torchvision.models.resnet import ResNet as RN
 
-from pathseg.models.builder import BACKBONES
+from ..builder import BACKBONES
 
 resnets = {
     'resnet18': {
@@ -173,4 +173,5 @@ class ResNet(RN):
         if weights is not None:
             settings = resnets[name]['pretrained_settings'][weights]
             self.load_state_dict(model_zoo.load_url(settings['url']))
+        del self.fc
         self.out_shapes = resnets[name]['out_shapes']

@@ -7,6 +7,7 @@ from pathseg.datasets.builder import PIPELINES
 class RandomSampling():
 
     # TODO: add OTSU
+    # TODO: add no target zone situation
     def __init__(self, prob_global, target_shape):
 
         self.prob_global = prob_global

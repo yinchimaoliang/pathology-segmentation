@@ -5,6 +5,7 @@ BACKBONES = Registry('backbone')
 ENCODERS = Registry('encoder')
 DECODERS = Registry('decoder')
 SEGMENTERS = Registry('segmenter')
+LOSSES = Registry('loss')
 
 
 def build(cfg, registry, default_args=None):
@@ -31,3 +32,7 @@ def build_decoder(cfg):
 
 def build_segmenter(cfg):
     return build(cfg, SEGMENTERS)
+
+
+def build_loss(cfg):
+    return build(cfg, LOSSES)

@@ -1,9 +1,11 @@
 import torch.nn as nn
 
+from ..builder import LOSSES
 from .bce_loss import BCELoss
 from .dice_loss import DiceLoss
 
 
+@LOSSES.register_module()
 class BCEDiceLoss(nn.Module):
 
     def __init__(self,

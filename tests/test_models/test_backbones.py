@@ -1,10 +1,8 @@
-import torch.nn as nn
-
-from pathseg.models.backbones import ResNet
+from pathseg.models import ResNet, build_backbone
 
 
 def test_resnet():
 
-    resnet = ResNet('resnet18', 'imagenet')
-    assert isinstance(resnet.layer1[0].conv1, nn.modules.conv.Conv2d)
-    assert resnet.out_shapes == (512, 256, 128, 64, 64)
+    cfg = dict(type='ResNet', name='resnet18', weights='imagenet')
+    resnet = build_backbone(cfg)
+    assert isinstance(resnet, ResNet)

@@ -1,8 +1,11 @@
 import os
+from math import ceil
 
+import cv2 as cv
+import numpy as np
 from torch.utils.data import Dataset
 
-from pathseg.datasets import DATASETS
+from .builder import DATASETS
 from .pipelines import Compose
 
 
@@ -13,15 +16,49 @@ class BaseDataset(Dataset):
                  data_root,
                  pipeline=None,
                  classes=None,
-                 test_mode=False):
+                 test_mode=False,
+                 stride=512,
+                 width=512,
+                 height=512):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
         self.test_mode = test_mode
         self.classes = classes
-        self.img_paths, self.ann_paths = self.load_data(self.data_root)
+        self.img_paths, self.ann_paths = self._load_data(self.data_root)
+        self.stride = stride
+        self.width = width
+        self.height = height
+        if self.test_mode:
+            self._get_info()
+        self._set_group_flag()
 
-    def load_data(self, data_root):
+    def _get_info(self):
+        self.img_dict = {}
+        self.ann_dict = {}
+        # name, pos of the input
+        self.infos = []
+        for i, img_path in enumerate(self.img_paths):
+            name = os.path.split(img_path)[-1]
+            img = cv.imread(img_path)
+            ann = cv.imread(self.ann_paths[i], 0)
+            self.img_dict[name] = img
+            self.ann_dict[name] = ann
+            height = img.shape[0]
+            width = img.shape[1]
+            for i in range(int(ceil(height / self.stride))):
+                for j in range(int(ceil(width / self.stride))):
+                    if j * self.stride + self.width < width:
+                        left = j * self.stride
+                    else:
+                        left = width - self.width
+                    if i * self.stride + self.height < height:
+                        up = i * self.stride
+                    else:
+                        up = height - self.height
+                    self.infos.append([name, up, left])
+
+    def _load_data(self, data_root):
         names = os.listdir(os.path.join(data_root, 'images'))
         img_paths = [os.path.join(data_root, 'images', name) for name in names]
         ann_paths = [
@@ -29,27 +66,52 @@ class BaseDataset(Dataset):
         ]
         return img_paths, ann_paths
 
-    def get_data_info(self, idx):
-        img_path = self.img_paths[idx]
-        ann_path = self.ann_paths[idx]
+    def _get_data_info(self, idx):
+        if self.test_mode:
+            info = self.infos[idx]
+            name, up, left = info
+            img = self.img_dict[name][up:up + self.height,
+                                      left:left + self.width, :]
+            ann = self.ann_dict[name][up:up + self.height,
+                                      left:left + self.width]
+            input_dict = dict(image=img, annotation=ann, info=info)
+        else:
+            img_path = self.img_paths[idx]
+            ann_path = self.ann_paths[idx]
 
-        input_dict = dict(img_path=img_path, ann_path=ann_path)
+            input_dict = dict(img_path=img_path, ann_path=ann_path)
         return input_dict
 
-    def prepare_train_data(self, idx):
-        input_dict = self.get_data_info(idx)
+    def _prepare_train_data(self, idx):
+        input_dict = self._get_data_info(idx)
         example = self.pipeline(input_dict)
         return example
 
-    def prepare_test_data(self, idx):
-        input_dict = self.get_data_info(idx)
+    def _prepare_test_data(self, idx):
+        input_dict = self._get_data_info(idx)
         example = self.pipeline(input_dict)
         return example
+
+    def _set_group_flag(self):
+        """Set flag according to image aspect ratio.
+
+        Images with aspect ratio greater than 1 will be set as group 1,
+        otherwise group 0.
+        In 3D datasets, they are all the same, thus are all zeros
+
+        """
+        self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def __getitem__(self, idx):
         if self.test_mode:
-            sample = self.prepare_test_data(idx)
+            sample = self._prepare_test_data(idx)
         else:
-            sample = self.prepare_train_data(idx)
+            sample = self._prepare_train_data(idx)
 
         return sample
+
+    def __len__(self):
+        if self.test_mode:
+            return len(self.infos)
+        else:
+            return len(self.img_paths)

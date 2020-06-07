@@ -30,10 +30,10 @@ class RandomSampling():
             target = targets[np.random.randint(targets.shape[0])]
             x = np.random.randint(
                 max(0, target[0] - self.target_shape[0]),
-                min(ann.shape[0] - self.target_shape[0], target[0]))
+                min(ann.shape[0] - self.target_shape[0], target[0] + 1))
             y = np.random.randint(
                 max(0, target[1] - self.target_shape[1]),
-                min(ann.shape[1] - self.target_shape[1], target[1]))
+                min(ann.shape[1] - self.target_shape[1], target[1] + 1))
 
         img = img[x:x + self.target_shape[0], y:y + self.target_shape[1], :]
         ann = ann[x:x + self.target_shape[0], y:y + self.target_shape[1]]

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from pathseg.datasets.base_dataset import BaseDataset
+from pathseg.datasets import BaseDataset, build_dataset
 
 
 def test_base_dataset():
@@ -27,8 +27,16 @@ def test_base_dataset():
             std=[0.1, 0.1, 0.1],
             num_classes=9)
     ]
-    base_dataset = BaseDataset(
-        data_root='./tests/data', pipeline=pipelines, test_mode=False)
+
+    cfg = dict(
+        type='BaseDataset',
+        data_root='./tests/data',
+        pipeline=pipelines,
+        test_mode=False)
+
+    base_dataset = build_dataset(cfg)
+    assert isinstance(base_dataset, BaseDataset)
+
     sample = base_dataset[0]
 
     img = sample['image']

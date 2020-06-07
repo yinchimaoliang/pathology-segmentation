@@ -1,9 +1,12 @@
-from pathseg.core.common.blocks import Conv2dReLU
-from pathseg.models.decoders import UnetDecoder
+from pathseg.models import UnetDecoder, build_decoder
 
 
 def test_unet_decoder():
-    unet_decoder = UnetDecoder((512, 256, 128, 64, 64),
-                               (512, 256, 128, 64, 64))
+    cfg = dict(
+        type='UnetDecoder',
+        encoder_channels=(512, 256, 128, 64, 64),
+        decoder_channels=(512, 256, 128, 64, 64))
 
-    assert isinstance(unet_decoder.layer1.block[0], Conv2dReLU)
+    unet_decoder = build_decoder(cfg)
+
+    assert isinstance(unet_decoder, UnetDecoder)

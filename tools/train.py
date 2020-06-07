@@ -24,7 +24,7 @@ def parge_config():
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=2,
+        default=4,
         required=False,
         help='batch size for training')
     parser.add_argument(
@@ -36,7 +36,7 @@ def parge_config():
     parser.add_argument(
         '--valid_per_iter',
         type=int,
-        default=10,
+        default=1,
         required=False,
         help='Number of Training epochs between valid')
     parser.add_argument(
@@ -121,8 +121,8 @@ class Train():
         ]
         disp_dict = dict()
         for ind, ret_dict in enumerate(self.valid_data_loader):
-            images = ret_dict['images'].to(self.device)
-            annotations = ret_dict['annotations'].to(self.device)
+            images = ret_dict['image'].to(self.device)
+            annotations = ret_dict['annotation'].to(self.device)
             outputs = self.segmenter.predict(images)
             loss = self.criterion(outputs, annotations)
             disp_dict['loss'] = loss.item()
@@ -135,7 +135,9 @@ class Train():
         print('\n')
         for eval in evals:
             print(eval.name, eval.get_result())
-            self.valid_tb_log.add_scalar(eval.name, eval.get_result(), epoch)
+            # TODO: add name of each class.
+            self.valid_tb_log.add_scalar(eval.name, np.mean(eval.get_result()),
+                                         epoch)
 
         pbar.close()
         self.save_ckpt(epoch)
@@ -144,13 +146,14 @@ class Train():
         self.segmenter = build_segmenter(self.cfg.model)
         self.segmenter.to(self.device)
         self.train_dataset = build_dataset(self.cfg.data.train)
-        # self.valid_dataset = build_dataset(self.cfg.data.valid)
+        self.valid_dataset = build_dataset(self.cfg.data.valid)
         print('Train dataset : %d' % len(self.train_dataset))
         self.train_data_loader = build_dataloader(self.train_dataset,
                                                   self.args.batch_size,
                                                   self.args.workers)
-        # self.valid_data_loader = build_dataloader(self.valid_dataset,
-        #   self.args.batch_size, self.args.workers)
+        self.valid_data_loader = build_dataloader(self.valid_dataset,
+                                                  self.args.batch_size,
+                                                  self.args.workers)
         self.max_dsc = 0
         self.criterion = build_loss(self.cfg.train.loss)
         self.optim = build_optimizer(self.segmenter, self.cfg.train.optimizer)
@@ -163,8 +166,8 @@ class Train():
             for cur_epoch in tbar:
                 self.train_one_epoch(tbar)
 
-                # if (cur_epoch + 1) % self.args.valid_per_iter == 0:
-                #     self.valid_one_epoch(cur_epoch)
+                if (cur_epoch + 1) % self.args.valid_per_iter == 0:
+                    self.valid_one_epoch(cur_epoch)
 
                 if cur_epoch < 59:
                     self.scheduler.step()

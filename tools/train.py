@@ -37,13 +37,13 @@ def parge_config():
     parser.add_argument(
         '--valid_per_iter',
         type=int,
-        default=1,
+        default=10,
         required=False,
         help='Number of Training epochs between valid')
     parser.add_argument(
         '--workers',
         type=int,
-        default=0,
+        default=4,
         help='number of workers for dataloader')
     parser.add_argument(
         '--extra_tag',
@@ -110,7 +110,6 @@ class Train():
         torch.save(ckpt_state, ckpt_name)
 
     def evaluation(self, names, epoch, class_names):
-        print(len(names))
         eval_dict = {}
         evals = [
             build_eval(dict(type=eval_name, class_num=self.class_num))
@@ -165,10 +164,10 @@ class Train():
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
             outputs = outputs.data.cpu().numpy()
+            info = ret_dict['info']
             for eval in evals:
                 disp_dict[eval.name] = np.mean(eval.step(outputs, annotations))
             for i, output in enumerate(outputs):
-                info = ret_dict['info']
                 name = info[0][i]
                 up = info[1][i].numpy()
                 left = info[2][i].numpy()

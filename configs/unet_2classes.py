@@ -11,6 +11,9 @@ model = dict(
     activation='softmax')
 
 data = dict(
+    width=512,
+    height=512,
+    stride=512,
     class_names=['Lesions'],
     train=dict(
         type='BaseDataset',

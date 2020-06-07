@@ -68,12 +68,13 @@ class BaseDataset(Dataset):
 
     def _get_data_info(self, idx):
         if self.test_mode:
-            name, up, left = self.infos[idx]
+            info = self.infos[idx]
+            name, up, left = info
             img = self.img_dict[name][up:up + self.height,
                                       left:left + self.width, :]
             ann = self.ann_dict[name][up:up + self.height,
                                       left:left + self.width]
-            input_dict = dict(image=img, annotation=ann)
+            input_dict = dict(image=img, annotation=ann, info=info)
         else:
             img_path = self.img_paths[idx]
             ann_path = self.ann_paths[idx]

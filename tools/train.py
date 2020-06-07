@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import cv2 as cv
 import mmcv
 import numpy as np
 import torch
@@ -36,13 +37,13 @@ def parge_config():
     parser.add_argument(
         '--valid_per_iter',
         type=int,
-        default=10,
+        default=1,
         required=False,
         help='Number of Training epochs between valid')
     parser.add_argument(
         '--workers',
         type=int,
-        default=4,
+        default=0,
         help='number of workers for dataloader')
     parser.add_argument(
         '--extra_tag',
@@ -108,7 +109,43 @@ class Train():
         ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
+    def evaluation(self, names, epoch, class_names):
+        print(len(names))
+        eval_dict = {}
+        evals = [
+            build_eval(dict(type=eval_name, class_num=self.class_num))
+            for eval_name in self.cfg.valid.evals
+        ]
+        for eval in evals:
+            for name in names:
+                eval.step(
+                    np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
+                    np.array([self.name_anno[name]]).transpose(0, 3, 1, 2))
+        for eval in evals:
+            for i, class_name in enumerate(class_names):
+                print(f'{eval.name}_{class_name}', eval.get_result()[i])
+                # TODO: add name of each class.
+                self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
+                                             eval.get_result()[i], epoch)
+            print(f'm_{eval.name}', np.mean(eval.get_result()))
+            self.valid_tb_log.add_scalar(f'm_{eval.name}',
+                                         np.mean(eval.get_result()), epoch)
+        for key, val in eval_dict.items():
+            self.tb_log.add_scalar(key, val, epoch)
+
     def valid_one_epoch(self, epoch, class_names):
+        self.name_mask = {}
+        self.name_anno = {}
+        names = os.listdir(
+            os.path.join(self.cfg.data.valid.data_root, 'images'))
+        for img_name in names:
+            img = cv.imread(
+                os.path.join(self.cfg.data.valid.data_root, 'images',
+                             img_name), 0)
+            self.name_mask[img_name] = np.zeros(
+                (img.shape[0], img.shape[1], self.class_num))
+            self.name_anno[img_name] = np.zeros(
+                (img.shape[0], img.shape[1], self.class_num))
         total_it_each_epoch = len(self.valid_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -130,18 +167,24 @@ class Train():
             outputs = outputs.data.cpu().numpy()
             for eval in evals:
                 disp_dict[eval.name] = np.mean(eval.step(outputs, annotations))
+            for i, output in enumerate(outputs):
+                info = ret_dict['info']
+                name = info[0][i]
+                up = info[1][i].numpy()
+                left = info[2][i].numpy()
+                self.name_mask[name][
+                    up:up + self.cfg.data.height, left:left +
+                    self.cfg.data.width, :] += outputs[i].transpose(1, 2, 0)
+                self.name_anno[name][
+                    up:up + self.cfg.data.height, left:left +
+                    self.cfg.data.width, :] = annotations[i].transpose(
+                        1, 2, 0)
+
             pbar.update()
             pbar.set_postfix(disp_dict)
+
+        self.evaluation(names, epoch, class_names)
         print('\n')
-        for eval in evals:
-            for i, class_name in enumerate(class_names):
-                print(f'{eval.name}_{class_name}', eval.get_result()[i])
-                # TODO: add name of each class.
-                self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
-                                             eval.get_result()[i], epoch)
-            print(f'm_{eval.name}', np.mean(eval.get_result()))
-            self.valid_tb_log.add_scalar(f'm_{eval.name}',
-                                         np.mean(eval.get_result()), epoch)
 
         pbar.close()
         self.save_ckpt(epoch)

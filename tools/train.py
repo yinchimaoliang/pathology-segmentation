@@ -108,7 +108,7 @@ class Train():
         ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
-    def valid_one_epoch(self, epoch):
+    def valid_one_epoch(self, epoch, class_names):
         total_it_each_epoch = len(self.valid_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -134,10 +134,11 @@ class Train():
             pbar.set_postfix(disp_dict)
         print('\n')
         for eval in evals:
-            print(eval.name, eval.get_result())
-            # TODO: add name of each class.
-            self.valid_tb_log.add_scalar(eval.name, np.mean(eval.get_result()),
-                                         epoch)
+            for i, class_name in enumerate(class_names):
+                print(f'{eval.name}_{class_name}', eval.get_result()[i])
+                # TODO: add name of each class.
+                self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
+                                             eval.get_result()[i], epoch)
 
         pbar.close()
         self.save_ckpt(epoch)
@@ -167,7 +168,7 @@ class Train():
                 self.train_one_epoch(tbar)
 
                 if (cur_epoch + 1) % self.args.valid_per_iter == 0:
-                    self.valid_one_epoch(cur_epoch)
+                    self.valid_one_epoch(cur_epoch, self.cfg.data.class_names)
 
                 if cur_epoch < 59:
                     self.scheduler.step()

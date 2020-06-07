@@ -11,6 +11,7 @@ model = dict(
     activation='softmax')
 
 data = dict(
+    class_names=[1, 2, 3, 4, 5, 6, 7, 8],
     train=dict(
         type='BaseDataset',
         data_root='./tests/data',

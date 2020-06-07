@@ -1,10 +1,11 @@
-from pathseg.models import UnetEncoder
+from pathseg.models import UnetEncoder, build_encoder
 
 
 def test_unet_encoder():
 
     backbone = dict(type='ResNet', name='resnet18', weights='imagenet')
 
-    unet_encoder = UnetEncoder(backbone)
+    cfg = dict(type='UnetEncoder', backbone=backbone)
+    unet_encoder = build_encoder(cfg)
 
-    print(unet_encoder)
+    assert isinstance(unet_encoder, UnetEncoder)

@@ -1,6 +1,6 @@
+from pathseg.models import build_segmenter
 from pathseg.models.decoders import UnetDecoder
 from pathseg.models.encoders import UnetEncoder
-from pathseg.models.segmenters import UNet
 
 
 def test_unet():
@@ -13,7 +13,10 @@ def test_unet():
         decoder_channels=(512, 256, 128, 64, 64),
     )
 
-    unet = UNet(encoder, decoder, 'softmax')
+    cfg = dict(
+        type='UNet', encoder=encoder, decoder=decoder, activation='softmax')
+
+    unet = build_segmenter(cfg)
 
     assert isinstance(unet.encoder, UnetEncoder)
     assert isinstance(unet.decoder, UnetDecoder)

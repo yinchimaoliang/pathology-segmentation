@@ -36,7 +36,7 @@ def parge_config():
     parser.add_argument(
         '--valid_per_iter',
         type=int,
-        default=1,
+        default=10,
         required=False,
         help='Number of Training epochs between valid')
     parser.add_argument(
@@ -58,7 +58,7 @@ class Train():
     def __init__(self):
         self.args = parge_config()
         self.cfg = Config.fromfile(self.args.cfg_file)
-        self.class_num = 9
+        self.class_num = len(self.cfg.data.class_names) + 1
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
         if not os.path.exists(self.output_dir):
@@ -139,6 +139,9 @@ class Train():
                 # TODO: add name of each class.
                 self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
                                              eval.get_result()[i], epoch)
+            print(f'm_{eval.name}', np.mean(eval.get_result()))
+            self.valid_tb_log.add_scalar(f'm_{eval.name}',
+                                         np.mean(eval.get_result()), epoch)
 
         pbar.close()
         self.save_ckpt(epoch)

@@ -1,0 +1,5 @@
+mmcv
+opencv-python
+pretrainedmodels
+tensorboardX
+tqdm

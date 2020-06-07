@@ -17,6 +17,9 @@ data = dict(
         pipeline=[
             dict(type='Loading'),
             dict(
+                type='RandomSampling', prob_global=.5, target_shape=(512,
+                                                                     512)),
+            dict(
                 type='Flip',
                 prob=.5,
                 flip_ratio_horizontal=.5,
@@ -28,9 +31,6 @@ data = dict(
                 flip_ratio_vertical=.5),
             dict(type='ShiftScaleRotate', prob=.5),
             dict(type='RandomRotate90', prob=.5),
-            dict(
-                type='RandomSampling', prob_global=.5, target_shape=(512,
-                                                                     512)),
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],

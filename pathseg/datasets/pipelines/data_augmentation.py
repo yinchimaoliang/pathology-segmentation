@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+
 from pathseg.datasets.builder import PIPELINES
 
 
@@ -18,6 +19,8 @@ class Flip(object):
         img = results['image']
         ann = results['annotation']
 
+        results['flip_horizontal'] = False
+        results['flip_ratio_vertical'] = False
         if np.random.random() < self.prob:
             if np.random.random() < self.flip_ratio_horizontal:
                 img = np.ascontiguousarray(img[:, ::-1, ...])
@@ -112,6 +115,7 @@ class ShiftScaleRotate(object):
         return warp_affine_fn(img)
 
     def __call__(self, results):
+        results['shift_scale_rotate'] = False
         if np.random.random() < self.prob:
             img = results['image']
             ann = results['annotation']
@@ -127,7 +131,6 @@ class ShiftScaleRotate(object):
             results['image'] = img
             results['annotation'] = ann
             results['shift_scale_rotate'] = True
-
         return results
 
     def __repr__(self):
@@ -145,17 +148,20 @@ class RandomRotate90(object):
         self.prob = prob
 
     def __call__(self, results):
-        img = results['image']
-        ann = results['annotation']
+        results['random_rotate_90'] = False
+        if np.random.random() < self.prob:
+            img = results['image']
+            ann = results['annotation']
 
-        factor = np.random.randint(0, 3)
+            factor = np.random.randint(0, 3)
 
-        img = np.ascontiguousarray(np.rot90(img, factor))
-        ann = np.ascontiguousarray(np.rot90(ann, factor))
+            img = np.ascontiguousarray(np.rot90(img, factor))
+            ann = np.ascontiguousarray(np.rot90(ann, factor))
 
-        results['image'] = img
-        results['annotation'] = ann
+            results['image'] = img
+            results['annotation'] = ann
 
+            results['random_rotate_90'] = True
         return results
 
     def __repr__(self):

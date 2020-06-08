@@ -61,7 +61,7 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=2)
+                num_classes=9)
         ],
         test_mode=True,
         width=512,
@@ -75,3 +75,8 @@ train = dict(
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
+
+inference = dict(
+    colors=[[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0],
+            [255, 0, 255], [0, 255, 255], [128, 128, 0], [0, 128, 128]],
+    weight=0.2)

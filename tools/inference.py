@@ -2,6 +2,7 @@ import argparse
 import os
 
 import cv2 as cv
+import mmcv
 import numpy as np
 import torch
 import tqdm
@@ -16,7 +17,7 @@ def parge_config():
     parser.add_argument(
         '--cfg_file',
         type=str,
-        default='configs/unet_9classes.py',
+        default='./configs/unet_9classes.py',
         help='specify the config for training')
     parser.add_argument(
         '--batch_size',
@@ -67,12 +68,30 @@ class Inference():
                                                       self.args.batch_size,
                                                       self.args.workers)
 
+    def visualize(self):
+        result_dir = os.path.join(self.output_dir, 'results')
+        colors = self.cfg.inference.colors
+        mmcv.mkdir_or_exist(result_dir)
+        for img_name in self.names:
+            img = cv.imread(
+                os.path.join(self.cfg.data.inference.data_root, 'images',
+                             img_name))
+            color_mask = np.zeros_like(img)
+            mask = np.argmax(self.name_mask[img_name], 2).astype(np.uint8)
+            for i, color in enumerate(colors):
+                pos = np.where(mask == i + 1)
+                color_mask[pos] = color
+            res = cv.addWeighted(img, (1 - self.cfg.inference.weight),
+                                 color_mask, self.cfg.inference.weight, 0)
+
+            cv.imwrite(os.path.join(result_dir, img_name), res)
+
     def inference(self):
         self.name_mask = {}
         self.name_anno = {}
-        names = os.listdir(
+        self.names = os.listdir(
             os.path.join(self.cfg.data.inference.data_root, 'images'))
-        for img_name in names:
+        for img_name in self.names:
             img = cv.imread(
                 os.path.join(self.cfg.data.inference.data_root, 'images',
                              img_name), 0)
@@ -111,7 +130,9 @@ class Inference():
         print('\n')
 
         pbar.close()
+        self.visualize()
 
 
 if __name__ == '__main__':
     inference = Inference()
+    inference.inference()

@@ -63,7 +63,7 @@ class Train():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
         if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
+            os.makedirs(self.output_dir)
         self.log_path = os.path.join(self.output_dir, 'logs')
         self.train_log_path = os.path.join(self.log_path, 'train')
         self.valid_log_path = os.path.join(self.log_path, 'valid')

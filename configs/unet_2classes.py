@@ -11,9 +11,6 @@ model = dict(
     activation='softmax')
 
 data = dict(
-    width=512,
-    height=512,
-    stride=512,
     class_names=['Lesions'],
     train=dict(
         type='BaseDataset',
@@ -41,7 +38,11 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        test_mode=False),
+        test_mode=False,
+        width=512,
+        height=512,
+        stride=512,
+    ),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',
@@ -52,7 +53,26 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        test_mode=True))
+        test_mode=True,
+        width=512,
+        height=512,
+        stride=512,
+    ),
+    inference=dict(
+        type='BaseDataset',
+        data_root='./data/test',
+        pipeline=[
+            dict(
+                type='Formating',
+                mean=[0.5, 0.5, 0.5],
+                std=[0.1, 0.1, 0.1],
+                num_classes=2)
+        ],
+        test_mode=True,
+        width=512,
+        height=512,
+        stride=512,
+    ))
 
 train = dict(
     loss=dict(type='BCEDiceLoss', ),

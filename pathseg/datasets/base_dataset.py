@@ -16,20 +16,20 @@ class BaseDataset(Dataset):
                  data_root,
                  pipeline=None,
                  classes=None,
-                 test_mode=False,
+                 random_sampling=False,
                  stride=512,
                  width=512,
                  height=512):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
-        self.test_mode = test_mode
+        self.random_sampling = random_sampling
         self.classes = classes
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
         self.stride = stride
         self.width = width
         self.height = height
-        if self.test_mode:
+        if not self.random_sampling:
             self._get_info()
         self._set_group_flag()
 
@@ -67,7 +67,7 @@ class BaseDataset(Dataset):
         return img_paths, ann_paths
 
     def _get_data_info(self, idx):
-        if self.test_mode:
+        if not self.random_sampling:
             info = self.infos[idx]
             name, up, left = info
             img = self.img_dict[name][up:up + self.height,
@@ -82,12 +82,7 @@ class BaseDataset(Dataset):
             input_dict = dict(img_path=img_path, ann_path=ann_path)
         return input_dict
 
-    def _prepare_train_data(self, idx):
-        input_dict = self._get_data_info(idx)
-        example = self.pipeline(input_dict)
-        return example
-
-    def _prepare_test_data(self, idx):
+    def _prepare_data(self, idx):
         input_dict = self._get_data_info(idx)
         example = self.pipeline(input_dict)
         return example
@@ -103,15 +98,12 @@ class BaseDataset(Dataset):
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def __getitem__(self, idx):
-        if self.test_mode:
-            sample = self._prepare_test_data(idx)
-        else:
-            sample = self._prepare_train_data(idx)
+        sample = self._prepare_data(idx)
 
         return sample
 
     def __len__(self):
-        if self.test_mode:
-            return len(self.infos)
-        else:
+        if self.random_sampling:
             return len(self.img_paths)
+        else:
+            return len(self.infos)

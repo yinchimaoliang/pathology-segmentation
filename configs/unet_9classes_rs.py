@@ -16,6 +16,10 @@ data = dict(
         type='BaseDataset',
         data_root='./tests/data',
         pipeline=[
+            dict(type='Loading'),
+            dict(
+                type='RandomSampling', prob_global=.5,
+                target_shape=(512, 512)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -34,7 +38,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        random_sampling=False),
+        test_mode=False),
     valid=dict(
         type='BaseDataset',
         data_root='./tests/data',
@@ -45,7 +49,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        random_sampling=False,
+        test_mode=True,
         width=512,
         height=512,
         stride=512),
@@ -59,7 +63,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        random_sampling=False,
+        test_mode=True,
         width=512,
         height=512,
         stride=512,

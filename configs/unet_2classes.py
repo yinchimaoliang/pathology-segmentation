@@ -58,7 +58,7 @@ data = dict(
         height=512,
         stride=512,
     ),
-    inference=dict(
+    test=dict(
         type='BaseDataset',
         data_root='./data/test',
         pipeline=[
@@ -75,8 +75,10 @@ data = dict(
     ))
 
 train = dict(
-    loss=dict(type='BCEDiceLoss', ),
+    loss=dict(type='BCEDiceLoss'),
     optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
+
+test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])

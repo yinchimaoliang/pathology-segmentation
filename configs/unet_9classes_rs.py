@@ -38,7 +38,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        test_mode=False),
+        sampling_option=True),
     valid=dict(
         type='BaseDataset',
         data_root='./tests/data',
@@ -49,7 +49,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        test_mode=True,
+        sampling_option=False,
         width=512,
         height=512,
         stride=512),
@@ -63,7 +63,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=9)
         ],
-        test_mode=True,
+        sampling_option=False,
         width=512,
         height=512,
         stride=512,

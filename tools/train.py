@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 
 import cv2 as cv
 import mmcv
@@ -13,6 +14,7 @@ from pathseg.core.evals import build_eval
 from pathseg.core.optimizers import build_optimizer
 from pathseg.datasets import build_dataloader, build_dataset
 from pathseg.models import build_loss, build_segmenter
+from pathseg.utils import collect_env, get_root_logger
 
 
 def parge_config():
@@ -62,16 +64,38 @@ class Train():
         self.class_num = len(self.cfg.data.class_names) + 1
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-        self.log_path = os.path.join(self.output_dir, 'logs')
-        self.train_log_path = os.path.join(self.log_path, 'train')
-        self.valid_log_path = os.path.join(self.log_path, 'valid')
-        mmcv.mkdir_or_exist(self.log_path)
-        mmcv.mkdir_or_exist(self.train_log_path)
-        mmcv.mkdir_or_exist(self.valid_log_path)
-        self.train_tb_log = SummaryWriter(self.train_log_path)
-        self.valid_tb_log = SummaryWriter(self.valid_log_path)
+        mmcv.mkdir_or_exist(self.output_dir)
+        self.tb_log_path = os.path.join(self.output_dir, 'logs')
+        self.train_tb_log_path = os.path.join(self.tb_log_path, 'train')
+        self.valid_tb_log_path = os.path.join(self.tb_log_path, 'valid')
+        mmcv.mkdir_or_exist(self.tb_log_path)
+        mmcv.mkdir_or_exist(self.train_tb_log_path)
+        mmcv.mkdir_or_exist(self.valid_tb_log_path)
+        self.train_tb_log = SummaryWriter(self.train_tb_log_path)
+        self.valid_tb_log = SummaryWriter(self.valid_tb_log_path)
+        self.segmenter = build_segmenter(self.cfg.model)
+        self.segmenter.to(self.device)
+        self.train_dataset = build_dataset(self.cfg.data.train)
+        self.valid_dataset = build_dataset(self.cfg.data.valid)
+        print('Train dataset : %d' % len(self.train_dataset))
+        self.train_data_loader = build_dataloader(self.train_dataset,
+                                                  self.args.batch_size,
+                                                  self.args.workers)
+        self.valid_data_loader = build_dataloader(self.valid_dataset,
+                                                  self.args.batch_size,
+                                                  self.args.workers)
+        self.max_dsc = 0
+        self.criterion = build_loss(self.cfg.train.loss)
+        self.optim = build_optimizer(self.segmenter, self.cfg.train.optimizer)
+        self.scheduler = torch.optim.lr_scheduler.StepLR(
+            self.optim,
+            step_size=self.cfg.train.scheduler.step_size,
+            gamma=self.cfg.train.scheduler.gamma)
+        self.accumulated_iter = 0
+        timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+        log_file = os.path.join(self.output_dir, f'{timestamp}.log')
+        self.logger = get_root_logger(
+            log_file=log_file, log_level=self.cfg.log_level)
 
     def train_one_epoch(self, tbar):
 
@@ -81,6 +105,7 @@ class Train():
             leave=True,
             desc='train',
             dynamic_ncols=True)
+        losses = []
         for ind, ret_dict in enumerate(self.train_data_loader):
             self.accumulated_iter += 1
             self.optim.zero_grad()
@@ -88,6 +113,7 @@ class Train():
             annotation = ret_dict['annotation'].to(self.device)
             outputs = self.segmenter(images)
             loss = self.criterion(outputs, annotation)
+            losses.append(loss.data.cpu().numpy())
             pbar.update()
             pbar.set_postfix(dict(loss=loss.item()))
             tbar.set_postfix(dict(total_it=self.accumulated_iter))
@@ -97,6 +123,7 @@ class Train():
             self.train_tb_log.add_scalar('loss', loss.item(),
                                          self.accumulated_iter)
         pbar.close()
+        return sum(losses) / len(losses)
 
     def save_ckpt(self, epoch):
         optim_state = self.optim.state_dict()
@@ -104,8 +131,7 @@ class Train():
         ckpt_state = dict(
             epoch=epoch, model_state=model_state, optim_state=optim_state)
         ckpt_dir = os.path.join(self.output_dir, 'ckpt')
-        if not os.path.exists(ckpt_dir):
-            os.mkdir(ckpt_dir)
+        mmcv.mkdir_or_exist(ckpt_dir)
         ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
@@ -189,35 +215,25 @@ class Train():
         self.save_ckpt(epoch)
 
     def main_func(self):
-        self.segmenter = build_segmenter(self.cfg.model)
-        self.segmenter.to(self.device)
-        self.train_dataset = build_dataset(self.cfg.data.train)
-        self.valid_dataset = build_dataset(self.cfg.data.valid)
-        print('Train dataset : %d' % len(self.train_dataset))
-        self.train_data_loader = build_dataloader(self.train_dataset,
-                                                  self.args.batch_size,
-                                                  self.args.workers)
-        self.valid_data_loader = build_dataloader(self.valid_dataset,
-                                                  self.args.batch_size,
-                                                  self.args.workers)
-        self.max_dsc = 0
-        self.criterion = build_loss(self.cfg.train.loss)
-        self.optim = build_optimizer(self.segmenter, self.cfg.train.optimizer)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(
-            self.optim,
-            step_size=self.cfg.train.scheduler.step_size,
-            gamma=self.cfg.train.scheduler.gamma)
-        self.accumulated_iter = 0
+        env_info_dict = collect_env()
+        env_info = '\n'.join([f'{k}: {v}' for k, v in env_info_dict.items()])
+        dash_line = '-' * 60 + '\n'
+        self.logger.info('Environment info:\n' + dash_line + env_info + '\n' +
+                         dash_line)
+        self.logger.info(self.segmenter)
         with tqdm.trange(0, self.args.epochs, desc='epochs') as tbar:
             for cur_epoch in tbar:
-                self.train_one_epoch(tbar)
+                loss = self.train_one_epoch(tbar)
+                cur_lr = self.optim.state_dict()['param_groups'][0]['lr']
+                self.logger.info(
+                    f'epoch: {cur_epoch}, learning rate: {cur_lr}, '
+                    f'loss: {loss}')
 
                 if (cur_epoch + 1) % self.args.valid_per_iter == 0:
                     self.valid_one_epoch(cur_epoch, self.cfg.data.class_names)
 
                 if cur_epoch < 59:
                     self.scheduler.step()
-            print(self.cfg)
 
 
 if __name__ == '__main__':

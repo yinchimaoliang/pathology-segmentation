@@ -7,15 +7,19 @@ model = dict(
     decoder=dict(
         type='UnetDecoder',
         decoder_channels=(512, 256, 128, 64, 64),
-        final_channels=9),
+        final_channels=2),
     activation='softmax')
 
 data = dict(
-    class_names=[1, 2, 3, 4, 5, 6, 7, 8],
+    class_names=['Lesions'],
     train=dict(
         type='BaseDataset',
-        data_root='./tests/data',
+        data_root='./data/train',
         pipeline=[
+            dict(type='Loading'),
+            dict(
+                type='RandomSampling', prob_global=.5,
+                target_shape=(512, 512)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -32,32 +36,37 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=9)
-        ],
-        random_sampling=False),
-    valid=dict(
-        type='BaseDataset',
-        data_root='./tests/data',
-        pipeline=[
-            dict(
-                type='Formating',
-                mean=[0.5, 0.5, 0.5],
-                std=[0.1, 0.1, 0.1],
-                num_classes=9)
+                num_classes=2)
         ],
         random_sampling=False,
         width=512,
         height=512,
-        stride=512),
-    inference=dict(
+        stride=512,
+    ),
+    valid=dict(
         type='BaseDataset',
-        data_root='./tests/data',
+        data_root='./data/valid',
         pipeline=[
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=9)
+                num_classes=2)
+        ],
+        random_sampling=False,
+        width=512,
+        height=512,
+        stride=512,
+    ),
+    test=dict(
+        type='BaseDataset',
+        data_root='./data/test',
+        pipeline=[
+            dict(
+                type='Formating',
+                mean=[0.5, 0.5, 0.5],
+                std=[0.1, 0.1, 0.1],
+                num_classes=2)
         ],
         random_sampling=False,
         width=512,
@@ -66,14 +75,12 @@ data = dict(
     ))
 
 train = dict(
-    loss=dict(type='BCEDiceLoss', ),
+    loss=dict(type='BCEDiceLoss'),
     optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
 
-inference = dict(
-    colors=[[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0],
-            [255, 0, 255], [0, 255, 255], [128, 128, 0], [0, 128, 128]],
-    weight=0.2)
+test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])
+
 log_level = 'INFO'

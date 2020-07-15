@@ -198,11 +198,12 @@ class Train():
                 up = info[1][i].numpy()
                 left = info[2][i].numpy()
                 self.name_mask[name][
-                    up:up + self.cfg.data.height, left:left +
-                    self.cfg.data.width, :] += outputs[i].transpose(1, 2, 0)
+                    up:up + self.cfg.data.valid.height, left:left +
+                    self.cfg.data.valid.width, :] += outputs[i].transpose(
+                        1, 2, 0)
                 self.name_anno[name][
-                    up:up + self.cfg.data.height, left:left +
-                    self.cfg.data.width, :] = annotations[i].transpose(
+                    up:up + self.cfg.data.valid.height, left:left +
+                    self.cfg.data.valid.width, :] = annotations[i].transpose(
                         1, 2, 0)
 
             pbar.update()

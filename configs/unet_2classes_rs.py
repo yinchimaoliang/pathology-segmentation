@@ -38,7 +38,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        random_sampling=False,
+        random_sampling=True,
         width=512,
         height=512,
         stride=512,

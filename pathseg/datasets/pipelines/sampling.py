@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 from pathseg.datasets.builder import PIPELINES
@@ -14,6 +16,7 @@ class RandomSampling():
         self.target_shape = target_shape
 
     def __call__(self, results):
+        start = time.time()
         img = results['image']
         ann = results['annotation']
 
@@ -39,7 +42,8 @@ class RandomSampling():
         ann = ann[x:x + self.target_shape[0], y:y + self.target_shape[1]]
         results['image'] = img
         results['annotation'] = ann
-
+        end = time.time()
+        print(f'sampling lasts {end - start} seconds')
         return results
 
     def __repr__(self):

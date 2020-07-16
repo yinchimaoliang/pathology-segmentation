@@ -16,7 +16,6 @@ data = dict(
         type='BaseDataset',
         data_root='./data/train',
         pipeline=[
-            dict(type='Loading'),
             dict(
                 type='RandomSampling', prob_global=.5,
                 target_shape=(512, 512)),

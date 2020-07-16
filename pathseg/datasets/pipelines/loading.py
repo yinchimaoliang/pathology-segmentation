@@ -1,5 +1,3 @@
-import time
-
 import cv2 as cv
 
 from pathseg.datasets.builder import PIPELINES
@@ -12,7 +10,6 @@ class Loading(object):
         self.shape = shape
 
     def __call__(self, results):
-        start = time.time()
         img_path = results['img_path']
         ann_path = results['ann_path']
 
@@ -25,8 +22,6 @@ class Loading(object):
 
         results['image'] = img
         results['annotation'] = ann
-        end = time.time()
-        print(f'Loading lasts {end - start} seconds')
         return results
 
     def __repr__(self):

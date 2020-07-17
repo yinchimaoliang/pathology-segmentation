@@ -41,7 +41,7 @@ data = dict(
         width=512,
         height=512,
         stride=512,
-    ),
+        repeat=100),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',
@@ -75,7 +75,7 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001),
+    optimizer=dict(type='Adam', lr=0.02, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])

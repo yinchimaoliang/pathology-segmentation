@@ -19,7 +19,8 @@ class BaseDataset(Dataset):
                  random_sampling=False,
                  stride=512,
                  width=512,
-                 height=512):
+                 height=512,
+                 repeat=1):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
@@ -29,8 +30,13 @@ class BaseDataset(Dataset):
         self.stride = stride
         self.width = width
         self.height = height
+        self.repeat = repeat
         self._get_info()
         self._set_group_flag()
+        if self.random_sampling:
+            self.length = len(self.img_paths)
+        else:
+            self.length = len(self.infos)
 
     def _get_info(self):
         self.img_dict = {}
@@ -98,12 +104,12 @@ class BaseDataset(Dataset):
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def __getitem__(self, idx):
-        sample = self._prepare_data(idx)
+        sample = self._prepare_data(idx % self.length)
 
         return sample
 
     def __len__(self):
         if self.random_sampling:
-            return len(self.img_paths)
+            return len(self.img_paths) * self.repeat
         else:
             return len(self.infos)

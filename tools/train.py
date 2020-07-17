@@ -159,7 +159,7 @@ class Train():
 
     def save_ckpt(self, epoch):
         optim_state = self.optim.state_dict()
-        model_state = self.segmenter.state_dict()
+        model_state = self.segmenter.module.state_dict()
         ckpt_state = dict(
             epoch=epoch, model_state=model_state, optim_state=optim_state)
         ckpt_dir = os.path.join(self.output_dir, 'ckpt')

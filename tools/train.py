@@ -22,7 +22,7 @@ def parge_config():
     parser.add_argument(
         '--cfg_file',
         type=str,
-        default='configs/unet_9classes.py',
+        default='configs/unet_resnet18_2classes.py',
         help='specify the config for training')
     parser.add_argument(
         '--batch_size',

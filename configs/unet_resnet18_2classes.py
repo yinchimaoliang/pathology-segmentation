@@ -18,10 +18,6 @@ data = dict(
         type='BaseDataset',
         data_root='./data/train',
         pipeline=[
-            dict(type='Loading'),
-            dict(
-                type='RandomSampling', prob_global=.5,
-                target_shape=(512, 512)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -40,7 +36,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        test_mode=False,
+        random_sampling=False,
         width=512,
         height=512,
         stride=512,
@@ -55,7 +51,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        test_mode=True,
+        random_sampling=False,
         width=512,
         height=512,
         stride=512,
@@ -70,7 +66,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        test_mode=True,
+        random_sampling=False,
         width=512,
         height=512,
         stride=512,
@@ -78,7 +74,7 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001),
+    optimizer=dict(type='Adam', lr=0.02, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])

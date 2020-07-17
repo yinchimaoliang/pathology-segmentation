@@ -12,6 +12,8 @@ model = dict(
 
 data = dict(
     class_names=['Lesions'],
+    samples_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
         data_root='./data/train',
@@ -84,3 +86,5 @@ valid = dict(evals=['Dsc', 'Iou'])
 test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])
 
 log_level = 'INFO'
+
+dist_params = dict(backend='nccl')

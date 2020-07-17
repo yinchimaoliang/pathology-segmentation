@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import tqdm
 from mmcv import Config
+from mmcv.runner import init_dist
 from tensorboardX import SummaryWriter
 
 from pathseg.core.evals import build_eval
@@ -25,12 +26,6 @@ def parge_config():
         default='configs/unet_resnet18_2classes.py',
         help='specify the config for training')
     parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=4,
-        required=False,
-        help='batch size for training')
-    parser.add_argument(
         '--epochs',
         type=int,
         default=180,
@@ -43,15 +38,15 @@ def parge_config():
         required=False,
         help='Number of Training epochs between valid')
     parser.add_argument(
-        '--workers',
-        type=int,
-        default=4,
-        help='number of workers for dataloader')
-    parser.add_argument(
         '--extra_tag',
         type=str,
         default='default',
         help='extra tag for this experiment')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
     args = parser.parse_args()
     return args
 
@@ -78,12 +73,12 @@ class Train():
         self.train_dataset = build_dataset(self.cfg.data.train)
         self.valid_dataset = build_dataset(self.cfg.data.valid)
         print('Train dataset : %d' % len(self.train_dataset))
-        self.train_data_loader = build_dataloader(self.train_dataset,
-                                                  self.args.batch_size,
-                                                  self.args.workers)
-        self.valid_data_loader = build_dataloader(self.valid_dataset,
-                                                  self.args.batch_size,
-                                                  self.args.workers)
+        self.train_data_loader = build_dataloader(
+            self.train_dataset, self.cfg.data.samples_per_gpu,
+            self.cfg.data.workers_per_gpu)
+        self.valid_data_loader = build_dataloader(
+            self.valid_dataset, self.cfg.data.samples_per_gpu,
+            self.cfg.data.workers_per_gpu)
         self.max_dsc = 0
         self.criterion = build_loss(self.cfg.train.loss)
         self.optim = build_optimizer(self.segmenter, self.cfg.train.optimizer)
@@ -96,6 +91,12 @@ class Train():
         log_file = os.path.join(self.output_dir, f'{timestamp}.log')
         self.logger = get_root_logger(
             log_file=log_file, log_level=self.cfg.log_level)
+        # init distributed env first, since logger depends on the dist info.
+        if self.args.launcher == 'none':
+            self.distributed = False
+        else:
+            self.distributed = True
+            init_dist(self.args.launcher, **self.cfg.dist_params)
 
     def train_one_epoch(self, tbar):
 

@@ -191,6 +191,7 @@ class Train():
             self.tb_log.add_scalar(key, val, epoch)
 
     def valid_one_epoch(self, epoch, class_names):
+        self.segmenter.eval()
         self.name_mask = {}
         self.name_anno = {}
         names = os.listdir(
@@ -217,11 +218,12 @@ class Train():
         for ind, ret_dict in enumerate(self.valid_data_loader):
             images = ret_dict['image'].to(self.device)
             annotations = ret_dict['annotation'].to(self.device)
-            outputs = self.segmenter.predict(images)
+            with torch.no_grad():
+                outputs = self.segmenter(images)
             loss = self.criterion(outputs, annotations)
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
-            outputs = outputs.data.cpu().numpy()
+            outputs = outputs[0].data.cpu().numpy()
             info = ret_dict['info']
             for eval in evals:
                 disp_dict[eval.name] = np.mean(eval.step(outputs, annotations))
@@ -246,6 +248,7 @@ class Train():
 
         pbar.close()
         self.save_ckpt(epoch)
+        self.segmenter.train()
 
     def main_func(self):
         env_info_dict = collect_env()

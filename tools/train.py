@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import tqdm
 from mmcv import Config
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import init_dist
 from tensorboardX import SummaryWriter
 
@@ -47,6 +48,18 @@ def parge_config():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
+    group_gpus = parser.add_mutually_exclusive_group()
+    group_gpus.add_argument(
+        '--gpus',
+        type=int,
+        help='number of gpus to use '
+        '(only applicable to non-distributed training)')
+    group_gpus.add_argument(
+        '--gpu-ids',
+        type=int,
+        nargs='+',
+        help='ids of gpus to use '
+        '(only applicable to non-distributed training)')
     args = parser.parse_args()
     return args
 
@@ -56,6 +69,9 @@ class Train():
     def __init__(self):
         self.args = parge_config()
         self.cfg = Config.fromfile(self.args.cfg_file)
+        if self.args.gpu_ids is None:
+            self.args.gpu_ids = range(1) if self.args.gpus is None else range(
+                self.args.gpus)
         self.class_num = len(self.cfg.data.class_names) + 1
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
@@ -69,13 +85,12 @@ class Train():
         self.train_tb_log = SummaryWriter(self.train_tb_log_path)
         self.valid_tb_log = SummaryWriter(self.valid_tb_log_path)
         self.segmenter = build_segmenter(self.cfg.model)
-        self.segmenter.to(self.device)
         self.train_dataset = build_dataset(self.cfg.data.train)
         self.valid_dataset = build_dataset(self.cfg.data.valid)
         print('Train dataset : %d' % len(self.train_dataset))
         self.train_data_loader = build_dataloader(
             self.train_dataset, self.cfg.data.samples_per_gpu,
-            self.cfg.data.workers_per_gpu)
+            self.cfg.data.workers_per_gpu, len(self.args.gpu_ids))
         self.valid_data_loader = build_dataloader(
             self.valid_dataset, self.cfg.data.samples_per_gpu,
             self.cfg.data.workers_per_gpu)
@@ -97,6 +112,22 @@ class Train():
         else:
             self.distributed = True
             init_dist(self.args.launcher, **self.cfg.dist_params)
+
+        # put model on gpus
+        if self.distributed:
+            find_unused_parameters = self.cfg.get('find_unused_parameters',
+                                                  False)
+            # Sets the `find_unused_parameters` parameter in
+            # torch.nn.parallel.DistributedDataParallel
+            self.segmenter = MMDistributedDataParallel(
+                self.segmenter.cuda(),
+                device_ids=[torch.cuda.current_device()],
+                broadcast_buffers=False,
+                find_unused_parameters=find_unused_parameters)
+        else:
+            self.segmenter = MMDataParallel(
+                self.segmenter.cuda(self.args.gpu_ids[0]),
+                device_ids=self.args.gpu_ids)
 
     def train_one_epoch(self, tbar):
 

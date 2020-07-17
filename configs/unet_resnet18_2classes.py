@@ -74,7 +74,7 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='Adam', lr=0.02, weight_decay=0.0001),
+    optimizer=dict(type='Adam', lr=0.01, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])

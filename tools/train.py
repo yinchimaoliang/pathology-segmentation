@@ -268,7 +268,7 @@ class Train():
                 if (cur_epoch + 1) % self.args.valid_per_iter == 0:
                     self.valid_one_epoch(cur_epoch, self.cfg.data.class_names)
 
-                if cur_epoch < 59:
+                if cur_epoch < 100:
                     self.scheduler.step()
 
 

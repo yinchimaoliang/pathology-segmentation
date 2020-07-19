@@ -1,4 +1,5 @@
 import cv2 as cv
+
 from pathseg.datasets.builder import PIPELINES
 
 
@@ -21,7 +22,6 @@ class Loading(object):
 
         results['image'] = img
         results['annotation'] = ann
-
         return results
 
     def __repr__(self):

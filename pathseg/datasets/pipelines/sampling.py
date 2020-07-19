@@ -39,7 +39,6 @@ class RandomSampling():
         ann = ann[x:x + self.target_shape[0], y:y + self.target_shape[1]]
         results['image'] = img
         results['annotation'] = ann
-
         return results
 
     def __repr__(self):

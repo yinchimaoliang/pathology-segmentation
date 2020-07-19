@@ -19,7 +19,8 @@ class BaseDataset(Dataset):
                  random_sampling=False,
                  stride=512,
                  width=512,
-                 height=512):
+                 height=512,
+                 repeat=1):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
@@ -29,9 +30,13 @@ class BaseDataset(Dataset):
         self.stride = stride
         self.width = width
         self.height = height
-        if not self.random_sampling:
-            self._get_info()
+        self.repeat = repeat
+        self._get_info()
         self._set_group_flag()
+        if self.random_sampling:
+            self.length = len(self.img_paths)
+        else:
+            self.length = len(self.infos)
 
     def _get_info(self):
         self.img_dict = {}
@@ -44,19 +49,20 @@ class BaseDataset(Dataset):
             ann = cv.imread(self.ann_paths[i], 0)
             self.img_dict[name] = img
             self.ann_dict[name] = ann
-            height = img.shape[0]
-            width = img.shape[1]
-            for i in range(int(ceil(height / self.stride))):
-                for j in range(int(ceil(width / self.stride))):
-                    if j * self.stride + self.width < width:
-                        left = j * self.stride
-                    else:
-                        left = width - self.width
-                    if i * self.stride + self.height < height:
-                        up = i * self.stride
-                    else:
-                        up = height - self.height
-                    self.infos.append([name, up, left])
+            if not self.random_sampling:
+                height = img.shape[0]
+                width = img.shape[1]
+                for i in range(int(ceil(height / self.stride))):
+                    for j in range(int(ceil(width / self.stride))):
+                        if j * self.stride + self.width < width:
+                            left = j * self.stride
+                        else:
+                            left = width - self.width
+                        if i * self.stride + self.height < height:
+                            up = i * self.stride
+                        else:
+                            up = height - self.height
+                        self.infos.append([name, up, left])
 
     def _load_data(self, data_root):
         names = os.listdir(os.path.join(data_root, 'images'))
@@ -76,10 +82,10 @@ class BaseDataset(Dataset):
                                       left:left + self.width]
             input_dict = dict(image=img, annotation=ann, info=info)
         else:
-            img_path = self.img_paths[idx]
-            ann_path = self.ann_paths[idx]
+            img = list(self.img_dict.values())[idx]
+            ann = list(self.ann_dict.values())[idx]
 
-            input_dict = dict(img_path=img_path, ann_path=ann_path)
+            input_dict = dict(image=img, annotation=ann)
         return input_dict
 
     def _prepare_data(self, idx):
@@ -98,12 +104,12 @@ class BaseDataset(Dataset):
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def __getitem__(self, idx):
-        sample = self._prepare_data(idx)
+        sample = self._prepare_data(idx % self.length)
 
         return sample
 
     def __len__(self):
         if self.random_sampling:
-            return len(self.img_paths)
+            return len(self.img_paths) * self.repeat
         else:
             return len(self.infos)

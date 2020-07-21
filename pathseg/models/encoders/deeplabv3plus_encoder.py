@@ -1,11 +1,6 @@
-import segmentation_models_pytorch as smp
-
 from pathseg.core.utils.dilate_utils import replace_strides_with_dilation
 from ..builder import ENCODERS
 from .base_encoder import BaseEncoder
-
-model = smp.DeepLabV3Plus(encoder_weights=None)
-print(model)
 
 
 @ENCODERS.register_module()

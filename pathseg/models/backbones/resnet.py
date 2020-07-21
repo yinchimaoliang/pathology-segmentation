@@ -179,9 +179,8 @@ class ResNet(RN):
         self.stages = self._get_stages()
 
     def _get_stages(self):
-        stages = [
+        stages = nn.Sequential(
             nn.Sequential(self.conv1, self.bn1, self.relu),
             nn.Sequential(self.maxpool, self.layer1), self.layer2, self.layer3,
-            self.layer4
-        ]
+            self.layer4)
         return stages

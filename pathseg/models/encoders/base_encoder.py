@@ -12,7 +12,8 @@ class BaseEncoder(nn.Module):
 
     def forward(self, x):
         features = []
-        for stage in self.backbone.stages():
-            features.append(stage(x))
+        for stage in self.backbone.stages:
+            x = stage(x)
+            features.insert(0, x)
 
         return features

@@ -1,5 +1,5 @@
 model = dict(
-    type='DeepLabV3Plus',
+    type='DeeplabV3Plus',
     encoder=dict(
         type='DeeplabV3PlusEncoder',
         backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),

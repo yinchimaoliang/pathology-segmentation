@@ -25,11 +25,6 @@ data = dict(
                 prob=.5,
                 flip_ratio_horizontal=.5,
                 flip_ratio_vertical=.5),
-            dict(
-                type='Flip',
-                prob=.5,
-                flip_ratio_horizontal=.5,
-                flip_ratio_vertical=.5),
             dict(type='ShiftScaleRotate', prob=.5),
             dict(type='RandomRotate90', prob=.5),
             dict(

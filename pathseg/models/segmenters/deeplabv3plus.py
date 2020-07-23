@@ -4,12 +4,11 @@ from ..builder import SEGMENTERS, build_decoder, build_encoder
 
 
 @SEGMENTERS.register_module()
-class UNet(nn.Module):
+class DeeplabV3Plus(nn.Module):
 
-    def __init__(self, encoder, decoder, activation='softmax'):
+    def __init__(self, encoder, decoder):
         super().__init__()
         self.encoder = build_encoder(encoder)
-        decoder['encoder_channels'] = self.encoder.backbone.out_shapes
         self.decoder = build_decoder(decoder)
 
     def forward(self, x):

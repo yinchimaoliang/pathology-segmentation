@@ -7,8 +7,7 @@ model = dict(
     decoder=dict(
         type='UnetDecoder',
         decoder_channels=(512, 256, 128, 64, 64),
-        final_channels=2),
-    activation='softmax')
+        final_channels=2))
 
 data = dict(
     class_names=['Lesions'],
@@ -21,11 +20,6 @@ data = dict(
             dict(
                 type='RandomSampling', prob_global=.5,
                 target_shape=(512, 512)),
-            dict(
-                type='Flip',
-                prob=.5,
-                flip_ratio_horizontal=.5,
-                flip_ratio_vertical=.5),
             dict(
                 type='Flip',
                 prob=.5,

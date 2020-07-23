@@ -7,7 +7,7 @@ from ..builder import DECODERS
 
 
 @DECODERS.register_module()
-class DeepLabV3PlusDecoder(Model):
+class DeeplabV3PlusDecoder(Model):
 
     def __init__(self,
                  encoder_channels,
@@ -54,4 +54,4 @@ class DeepLabV3PlusDecoder(Model):
         concat_features = torch.cat([aspp_features, high_res_features], dim=1)
         fused_features = self.block2(concat_features)
         final_features = self.up(self.final_conv(fused_features))
-        return final_features
+        return [final_features]

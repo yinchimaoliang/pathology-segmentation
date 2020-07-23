@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from pathseg.core.common.blocks import SeparableConv2d
 from pathseg.core.utils.dilate_utils import replace_strides_with_dilation
 from ..builder import ENCODERS
 from .base_encoder import BaseEncoder
@@ -99,37 +100,6 @@ class ASPP(nn.Module):
             res.append(conv(x))
         res = torch.cat(res, dim=1)
         return self.project(res)
-
-
-class SeparableConv2d(nn.Sequential):
-
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        bias=True,
-    ):
-        dephtwise_conv = nn.Conv2d(
-            in_channels,
-            in_channels,
-            kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            groups=in_channels,
-            bias=False,
-        )
-        pointwise_conv = nn.Conv2d(
-            in_channels,
-            out_channels,
-            kernel_size=1,
-            bias=bias,
-        )
-        super().__init__(dephtwise_conv, pointwise_conv)
 
 
 @ENCODERS.register_module()

@@ -20,9 +20,6 @@ data = dict(
         data_root='./data/train',
         pipeline=[
             dict(
-                type='RandomSampling', prob_global=.5,
-                target_shape=(512, 512)),
-            dict(
                 type='Flip',
                 prob=.5,
                 flip_ratio_horizontal=.5,

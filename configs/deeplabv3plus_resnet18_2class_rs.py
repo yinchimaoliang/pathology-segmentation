@@ -13,7 +13,7 @@ model = dict(
 
 data = dict(
     class_names=['Lesions'],
-    samples_per_gpu=10,
+    samples_per_gpu=20,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
@@ -39,7 +39,7 @@ data = dict(
         width=512,
         height=512,
         stride=512,
-        repeat=100),
+        repeat=400),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',

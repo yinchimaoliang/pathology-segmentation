@@ -13,7 +13,7 @@ model = dict(
 
 data = dict(
     class_names=['Lesions'],
-    samples_per_gpu=20,
+    samples_per_gpu=40,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
@@ -78,7 +78,7 @@ train = dict(
 
 valid = dict(evals=['Dsc', 'Iou'])
 
-test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])
+test = dict(colors=[[0, 255, 0]], weight=0.2, evals=['Dsc', 'Iou'])
 
 log_level = 'INFO'
 

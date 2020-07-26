@@ -1,3 +1,4 @@
+import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from pretrainedmodels.models.torchvision_models import pretrained_settings
 from torchvision.models.resnet import BasicBlock, Bottleneck
@@ -175,3 +176,11 @@ class ResNet(RN):
             self.load_state_dict(model_zoo.load_url(settings['url']))
         del self.fc
         self.out_shapes = resnets[name]['out_shapes']
+        self.stages = self._get_stages()
+
+    def _get_stages(self):
+        stages = nn.Sequential(
+            nn.Sequential(self.conv1, self.bn1, self.relu),
+            nn.Sequential(self.maxpool, self.layer1), self.layer2, self.layer3,
+            self.layer4)
+        return stages

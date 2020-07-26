@@ -1,22 +1,27 @@
 model = dict(
-    type='UNet',
+    type='DeeplabV3Plus',
     encoder=dict(
-        type='UnetEncoder',
+        type='DeeplabV3PlusEncoder',
         backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
-    ),
+        encoder_output_stride=16),
     decoder=dict(
-        type='UnetDecoder',
-        decoder_channels=(512, 256, 128, 64, 64),
+        type='DeeplabV3PlusDecoder',
+        encoder_channels=(256, 64),
+        decoder_channels=[256, 48],
+        output_stride=16,
         final_channels=2))
 
 data = dict(
     class_names=['Lesions'],
-    samples_per_gpu=10,
+    samples_per_gpu=40,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
         data_root='./data/train',
         pipeline=[
+            dict(
+                type='RandomSampling', prob_global=.5,
+                target_shape=(512, 512)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -30,11 +35,11 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=2)
         ],
-        random_sampling=False,
+        random_sampling=True,
         width=512,
         height=512,
         stride=512,
-    ),
+        repeat=400),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',
@@ -68,12 +73,12 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='Adam', lr=0.001, weight_decay=0.0001),
+    optimizer=dict(type='Adam', lr=0.01, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
 
-test = dict(colors=[[0, 255, 0]], weight=0.2, evals=['Dsc', 'Iou'])
+test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])
 
 log_level = 'INFO'
 

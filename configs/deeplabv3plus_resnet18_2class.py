@@ -1,17 +1,19 @@
 model = dict(
-    type='UNet',
+    type='DeeplabV3Plus',
     encoder=dict(
-        type='UnetEncoder',
+        type='DeeplabV3PlusEncoder',
         backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
-    ),
+        encoder_output_stride=16),
     decoder=dict(
-        type='UnetDecoder',
-        decoder_channels=(512, 256, 128, 64, 64),
+        type='DeeplabV3PlusDecoder',
+        encoder_channels=(256, 64),
+        decoder_channels=[256, 48],
+        output_stride=16,
         final_channels=2))
 
 data = dict(
     class_names=['Lesions'],
-    samples_per_gpu=10,
+    samples_per_gpu=40,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
@@ -33,8 +35,7 @@ data = dict(
         random_sampling=False,
         width=512,
         height=512,
-        stride=512,
-    ),
+        stride=512),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',
@@ -68,7 +69,7 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='Adam', lr=0.001, weight_decay=0.0001),
+    optimizer=dict(type='Adam', lr=0.01, weight_decay=0.0001),
     scheduler=dict(step_size=30, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])

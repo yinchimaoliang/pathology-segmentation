@@ -2,7 +2,7 @@ model = dict(
     type='DeeplabV3Plus',
     encoder=dict(
         type='DeeplabV3PlusEncoder',
-        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
+        backbone=dict(type='ResNet', name='resnet152', weights='imagenet'),
         encoder_output_stride=16),
     decoder=dict(
         type='DeeplabV3PlusDecoder',

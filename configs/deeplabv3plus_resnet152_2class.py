@@ -13,7 +13,7 @@ model = dict(
 
 data = dict(
     class_names=['Lesions'],
-    samples_per_gpu=40,
+    samples_per_gpu=20,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',

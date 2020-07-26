@@ -61,6 +61,7 @@ class Test():
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
         self.segmenter = build_segmenter(self.cfg.model)
+        self.segmenter.eval()
         self.segmenter.to(self.device)
         state_dict = torch.load(self.args.ckpt_path)['model_state']
         self.segmenter.load_state_dict(state_dict)
@@ -127,9 +128,10 @@ class Test():
         for ind, ret_dict in enumerate(self.test_data_loader):
             images = ret_dict['image'].to(self.device)
             annotations = ret_dict['annotation'].to(self.device)
-            outputs = self.segmenter.predict(images)
+            with torch.no_grad():
+                outputs = self.segmenter(images)
             annotations = annotations.cpu().numpy()
-            outputs = outputs.data.cpu().numpy()
+            outputs = outputs[0].data.cpu().numpy()
             info = ret_dict['info']
             for i, output in enumerate(outputs):
                 name = info[0][i]

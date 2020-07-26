@@ -78,7 +78,7 @@ train = dict(
 
 valid = dict(evals=['Dsc', 'Iou'])
 
-test = dict(colors=[[0, 255, 0]], weight=0.2, evals=['Dsc', 'Iou'])
+test = dict(colors=[[255, 0, 0]], weight=0.2, evals=['Dsc', 'Iou'])
 
 log_level = 'INFO'
 

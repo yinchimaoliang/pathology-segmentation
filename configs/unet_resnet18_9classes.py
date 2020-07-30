@@ -10,7 +10,10 @@ model = dict(
         final_channels=9))
 
 data = dict(
-    class_names=['Lesions'],
+    class_names=[
+        'Inflammation', 'Low', 'High', 'Cercinoma', 'Indefinite1',
+        'Indefinite2', 'Indefinite3', 'Squashed'
+    ],
     samples_per_gpu=10,
     workers_per_gpu=4,
     train=dict(
@@ -58,7 +61,7 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=2)
+                num_classes=9)
         ],
         random_sampling=False,
         width=512,

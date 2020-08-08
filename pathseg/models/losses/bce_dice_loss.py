@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from ..builder import LOSSES
@@ -24,5 +25,5 @@ class BCEDiceLoss(nn.Module):
         self.dice_loss = DiceLoss(beta, eps, threshold, activation)
 
     def forward(self, outputs, annotation):
-        return self.bce_loss(outputs, annotation) + self.dice_loss(
-            outputs, annotation)
+        return self.bce_loss(outputs, annotation.to(
+            torch.float)) + self.dice_loss(outputs, annotation)

@@ -22,13 +22,8 @@ class Dsc():
         pr = pr.transpose(0, 2, 3, 1)
         gt = gt.transpose(0, 2, 3, 1)
         epsilon = 1e-6
-        # print(pr.shape)
-        # print(gt.shape)
-        y_true = np.eye(self.class_num)[np.argmax(pr, axis=3)].astype(np.bool)
-        # print('y_true : ', y_true.shape)
-        y_pred = gt.astype(np.bool)
-        inter = np.sum(np.bitwise_and(y_true, y_pred), axis=(0, 1, 2))
-        union = np.sum(y_true, axis=(0, 1, 2)) + np.sum(y_pred, axis=(0, 1, 2))
+        inter = np.sum(np.bitwise_and(pr, gt), axis=(0, 1, 2))
+        union = np.sum(pr, axis=(0, 1, 2)) + np.sum(gt, axis=(0, 1, 2))
         dsc = ((2. * inter + epsilon) / (union + epsilon))[1:]
         # print(iou)
         self.dscs.append(dsc)

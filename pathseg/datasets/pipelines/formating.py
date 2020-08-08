@@ -21,9 +21,9 @@ class Formating():
             tfs.Normalize(self.mean, self.std)
         ])
         img = im_tfs(img)
-        ann = np.eye(self.num_classes)[ann]
+        ann = np.eye(self.num_classes, dtype=np.bool)[ann]
         ann = ann.transpose(2, 0, 1)
-        ann = torch.FloatTensor(ann)
+        ann = torch.from_numpy(ann)
 
         results['image'] = img
         results['annotation'] = ann

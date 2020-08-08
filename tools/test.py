@@ -67,8 +67,8 @@ class Test():
         self.segmenter.load_state_dict(state_dict)
         self.test_dataset = build_dataset(self.cfg.data.test)
         self.test_data_loader = build_dataloader(self.test_dataset,
-                                                 self.args.batch_size,
-                                                 self.args.workers)
+                                                 self.cfg.data.samples_per_gpu,
+                                                 self.cfg.data.workers_per_gpu)
 
     def evaluation(self, names, class_names):
         evals = [
@@ -115,9 +115,9 @@ class Test():
                 os.path.join(self.cfg.data.test.data_root, 'images', img_name),
                 0)
             self.name_mask[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num))
+                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
             self.name_anno[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num))
+                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
         total_it_each_epoch = len(self.test_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -137,10 +137,13 @@ class Test():
                 name = info[0][i]
                 up = info[1][i].numpy()
                 left = info[2][i].numpy()
-                self.name_mask[name][
-                    up:up + self.cfg.data.test.height, left:left +
-                    self.cfg.data.test.width, :] += outputs[i].transpose(
-                        1, 2, 0)
+                self.name_mask[name][up:up + self.cfg.data.test.height,
+                                     left:left +
+                                     self.cfg.data.test.width, :] += np.eye(
+                                         self.class_num,
+                                         dtype=np.bool)[np.argmax(
+                                             outputs[i].transpose(1, 2, 0),
+                                             axis=2)]
                 self.name_anno[name][
                     up:up + self.cfg.data.test.height, left:left +
                     self.cfg.data.test.width, :] = annotations[i].transpose(

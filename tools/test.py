@@ -21,33 +21,18 @@ def parge_config():
         default='./configs/unet_9classes.py',
         help='specify the config for training')
     parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=4,
-        required=False,
-        help='batch size for training')
-    parser.add_argument(
         '--ckpt_path',
         type=str,
         default=None,
         required=False,
         help='The path of the checkpoint file')
     parser.add_argument(
-        '--valid_per_iter',
-        type=int,
-        default=10,
-        required=False,
-        help='Number of Training epochs between valid')
-    parser.add_argument(
-        '--workers',
-        type=int,
-        default=4,
-        help='number of workers for dataloader')
-    parser.add_argument(
         '--extra_tag',
         type=str,
         default='default',
         help='extra tag for this experiment')
+    parser.add_argument('--show', action='store_true')
+    parser.add_argument('--show_gt', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -88,15 +73,18 @@ class Test():
                 print(f'{eval.name}_{class_name}', eval.get_result()[i])
             print(f'm_{eval.name}', np.mean(eval.get_result()))
 
-    def show_result(self):
-        result_dir = os.path.join(self.output_dir, 'results')
+    def show(self, task='results'):
+        result_dir = os.path.join(self.output_dir, task)
         colors = self.cfg.test.colors
         mmcv.mkdir_or_exist(result_dir)
         for img_name in self.names:
             img = cv.imread(
                 os.path.join(self.cfg.data.test.data_root, 'images', img_name))
             color_mask = np.zeros_like(img)
-            mask = np.argmax(self.name_mask[img_name], 2).astype(np.uint8)
+            if task == 'results':
+                mask = np.argmax(self.name_mask[img_name], 2).astype(np.uint8)
+            else:
+                mask = np.argmax(self.name_anno[img_name], 2).astype(np.uint8)
             for i, color in enumerate(colors):
                 pos = np.where(mask == i + 1)
                 color_mask[pos] = color
@@ -154,7 +142,10 @@ class Test():
         print('\n')
         self.evaluation(self.names, self.cfg.data.class_names)
         pbar.close()
-        self.show_result()
+        if self.args.show:
+            self.show('results')
+        if self.args.show_gt:
+            self.show('gt')
 
 
 if __name__ == '__main__':

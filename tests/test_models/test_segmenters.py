@@ -49,3 +49,20 @@ def test_deeplabv3plus():
     input_features = torch.rand(2, 3, 256, 256)
     out_features = deeplabv3plus(input_features)
     assert out_features.shape == (2, 2, 256, 256)
+
+
+def test_nnunet():
+    encoder = dict(
+        type='UnetEncoder',
+        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'))
+
+    decoder = dict(
+        type='UnetDecoder',
+        decoder_channels=(512, 256, 128, 64, 64),
+        final_channels=2)
+
+    cfg = dict(
+        type='NNUNet', encoder=encoder, decoder=decoder, activation='softmax')
+
+    nnunet = build_segmenter(cfg)
+    print(nnunet)

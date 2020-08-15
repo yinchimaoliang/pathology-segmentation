@@ -65,4 +65,5 @@ def test_nnunet():
         type='NNUNet', encoder=encoder, decoder=decoder, activation='softmax')
 
     nnunet = build_segmenter(cfg)
-    print(nnunet)
+    assert isinstance(nnunet.encoder, UnetEncoder)
+    assert isinstance(nnunet.decoder, UnetDecoder)

@@ -34,9 +34,9 @@ data = dict(
                 num_classes=2)
         ],
         random_sampling=True,
-        width=512,
-        height=512,
-        stride=512,
+        width=256,
+        height=256,
+        stride=256,
         repeat=400),
     valid=dict(
         type='BaseDataset',
@@ -49,9 +49,9 @@ data = dict(
                 num_classes=2)
         ],
         random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
+        width=256,
+        height=256,
+        stride=256,
     ),
     test=dict(
         type='BaseDataset',
@@ -64,9 +64,9 @@ data = dict(
                 num_classes=2)
         ],
         random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
+        width=256,
+        height=256,
+        stride=256,
     ))
 
 train = dict(

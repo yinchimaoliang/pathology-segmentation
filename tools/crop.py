@@ -52,7 +52,7 @@ class Crop():
                     cv.imwrite(
                         os.path.join(self.target_root, 'annotations',
                                      f'{name}_{up}_{left}.png'),
-                        img[up:up + self.height, left:left + self.width])
+                        ann[up:up + self.height, left:left + self.width])
 
     def _get_infos(self):
         names = os.listdir(os.path.join(self.data_root, 'images'))
@@ -71,5 +71,5 @@ class Crop():
 
 
 if __name__ == '__main__':
-    crop = Crop('./data/train', './data/cropped/train')
+    crop = Crop('./data/test', './data/cropped/test', stride=512)
     crop.main_func()

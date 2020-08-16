@@ -29,10 +29,10 @@ class Crop():
             name = os.path.split(img_path)[-1].split('.')[0]
             img = cv.imread(img_path)
             ann = cv.imread(self.ann_paths[i], 0)
-            if np.sum(ann > 3) > self.height * self.width / 100:
+            if np.sum(ann > 4) > self.height * self.width / 100:
                 continue
             else:
-                ann[ann > 3] = 0
+                ann[ann > 4] = 0
             height = img.shape[0]
             width = img.shape[1]
             for i in range(int(ceil(height / self.stride))):

@@ -1,3 +1,4 @@
+class_names = ['inflammation', 'low', 'high', 'cercinoma']
 model = dict(
     type='UNet',
     encoder=dict(
@@ -7,12 +8,12 @@ model = dict(
     decoder=dict(
         type='UnetDecoder',
         decoder_channels=(512, 256, 128, 64, 64),
-        final_channels=3))
+        final_channels=len(class_names) + 1))
 
 data = dict(
-    class_names=['Lesions'],
+    class_names=class_names,
     samples_per_gpu=10,
-    workers_per_gpu=4,
+    workers_per_gpu=0,
     train=dict(
         type='BaseDataset',
         data_root='./data/cropped/train',
@@ -28,7 +29,7 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=3)
+                num_classes=len(class_names) + 1)
         ],
         random_sampling=False,
         width=512,
@@ -43,7 +44,7 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=3)
+                num_classes=len(class_names) + 1)
         ],
         random_sampling=False,
         width=512,
@@ -58,7 +59,7 @@ data = dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
-                num_classes=3)
+                num_classes=len(class_names) + 1)
         ],
         random_sampling=False,
         width=512,
@@ -68,8 +69,8 @@ data = dict(
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),
-    optimizer=dict(type='Adam', lr=0.001, weight_decay=0.0001),
-    scheduler=dict(step_size=30, gamma=0.1))
+    optimizer=dict(type='Adam', lr=0.002, weight_decay=0.0001),
+    scheduler=dict(step_size=10, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
 

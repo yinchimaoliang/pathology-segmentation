@@ -15,7 +15,7 @@ data = dict(
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
-        data_root='./data/cropped/test',
+        data_root='./data/cropped/train',
         pipeline=[
             dict(
                 type='Flip',
@@ -37,7 +37,7 @@ data = dict(
     ),
     valid=dict(
         type='BaseDataset',
-        data_root='./data/cropped/test',
+        data_root='./data/cropped/valid',
         pipeline=[
             dict(
                 type='Formating',

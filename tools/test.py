@@ -62,12 +62,9 @@ class Test():
         ]
         for eval in evals:
             for name in names:
-                print(
-                    name, eval.name,
-                    eval.step(
-                        np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
-                        np.array([self.name_anno[name]]).transpose(0, 3, 1,
-                                                                   2)))
+                eval.step(
+                    np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
+                    np.array([self.name_anno[name]]).transpose(0, 3, 1, 2))
         for eval in evals:
             for i, class_name in enumerate(class_names):
                 print(f'{eval.name}_{class_name}', eval.get_result()[i])

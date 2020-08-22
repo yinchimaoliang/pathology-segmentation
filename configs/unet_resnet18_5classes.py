@@ -1,4 +1,4 @@
-class_names = ['inflammation', 'low', 'high', 'cercinoma']
+class_names = ['inflammation', 'low', 'high', 'carcinoma']
 model = dict(
     type='UNet',
     encoder=dict(
@@ -53,7 +53,7 @@ data = dict(
     ),
     test=dict(
         type='BaseDataset',
-        data_root='./cropped/data/test',
+        data_root='./data/cropped/valid',
         pipeline=[
             dict(
                 type='Formating',
@@ -74,7 +74,10 @@ train = dict(
 
 valid = dict(evals=['Dsc', 'Iou'])
 
-test = dict(colors=[[0, 255, 0]], weight=0.2, evals=['Dsc', 'Iou'])
+test = dict(
+    colors=[[0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0]],
+    weight=0.2,
+    evals=['Dsc', 'Iou'])
 
 log_level = 'INFO'
 

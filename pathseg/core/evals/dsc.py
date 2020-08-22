@@ -8,7 +8,7 @@ class Dsc():
 
     def __init__(self, class_num):
         self.name = 'dsc'
-        self.dscs = []
+        self.dscs = [[] for _ in range(class_num - 1)]
         self.class_num = class_num
         self.num = 0
 
@@ -24,11 +24,12 @@ class Dsc():
         epsilon = 1e-6
         inter = np.sum(np.bitwise_and(pr, gt), axis=(0, 1, 2))
         union = np.sum(pr, axis=(0, 1, 2)) + np.sum(gt, axis=(0, 1, 2))
-        dsc = ((2. * inter + epsilon) / (union + epsilon))[1:]
-        # print(iou)
-        self.dscs.append(dsc)
+        dscs = ((2. * inter + epsilon) / (union + epsilon))[1:]
+        for i, dsc in enumerate(dscs):
+            if union[i + 1] > 0:
+                self.dscs[i].append(dsc)
 
-        return np.mean(dsc, axis=0)
+        return np.mean(dscs, axis=0)
 
     def get_result(self):
-        return np.mean(self.dscs, axis=0)
+        return [np.mean(dsc) for dsc in self.dscs]

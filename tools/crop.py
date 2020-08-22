@@ -27,9 +27,14 @@ class Crop():
         self.infos = []
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1].split('.')[0]
+            print(name)
             img = cv.imread(img_path)
             ann = cv.imread(self.ann_paths[i], 0)
-            if np.sum(ann > 4) > self.height * self.width / 100:
+            # print(f'1: {np.sum(ann==1)}')
+            # print(f'2: {np.sum(ann==2)}')
+            # print(f'3: {np.sum(ann==3)}')
+            # print(f'4: {np.sum(ann==4)}')
+            if np.sum(ann > 4) > self.height * self.width / 2:
                 continue
             else:
                 ann[ann > 4] = 0

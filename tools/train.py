@@ -210,10 +210,10 @@ class Train():
             leave=True,
             desc='valid',
             dynamic_ncols=True)
-        evals = [
-            build_eval(dict(type=eval_name, class_num=self.class_num))
-            for eval_name in self.cfg.valid.evals
-        ]
+        # evals = [
+        #     build_eval(dict(type=eval_name, class_num=self.class_num))
+        #     for eval_name in self.cfg.valid.evals
+        # ]
         disp_dict = dict()
         for ind, ret_dict in enumerate(self.valid_data_loader):
             images = ret_dict['image'].to(self.device)
@@ -229,8 +229,9 @@ class Train():
                     outputs.transpose(0, 2, 3, 1), axis=3)]
             annotations = annotations.transpose(0, 2, 3, 1)
             info = ret_dict['info']
-            for eval in evals:
-                disp_dict[eval.name] = np.mean(eval.step(outputs, annotations))
+            # for eval in evals:
+            #     disp_dict[eval.name] = np.mean
+            #     (eval.step(outputs, annotations))
             for i, output in enumerate(outputs):
                 name = info[0][i]
                 up = info[1][i].numpy()

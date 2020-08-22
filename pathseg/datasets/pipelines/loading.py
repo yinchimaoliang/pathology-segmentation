@@ -6,7 +6,7 @@ from pathseg.datasets.builder import PIPELINES
 @PIPELINES.register_module()
 class Loading(object):
 
-    def __init__(self, shape=None):
+    def __init__(self, shape):
         self.shape = shape
 
     def __call__(self, results):

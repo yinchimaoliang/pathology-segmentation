@@ -20,12 +20,16 @@ class BaseDataset(Dataset):
                  stride=512,
                  width=512,
                  height=512,
-                 repeat=1):
+                 repeat=1,
+                 balance_class=False,
+                 use_path=False):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
         self.random_sampling = random_sampling
         self.classes = classes
+        self.balance_class = balance_class
+        self.use_path = use_path
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
         self.stride = stride
         self.width = width
@@ -43,12 +47,28 @@ class BaseDataset(Dataset):
         self.ann_dict = {}
         # name, pos of the input
         self.infos = []
+        self.imgs = []
+        self.anns = []
+        if self.balance_class:
+            classes_img_paths = [[] for _ in range(len(self.classes))]
+            classes_ann_paths = [[] for _ in range(len(self.classes))]
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
             img = cv.imread(img_path)
             ann = cv.imread(self.ann_paths[i], 0)
-            self.img_dict[name] = img
-            self.ann_dict[name] = ann
+            if self.use_path:
+                if self.balance_class:
+                    for i in range(len(self.classes)):
+                        if np.sum(ann == i) > 100:
+                            classes_img_paths[i].append(img_path)
+                            classes_ann_paths[i].append(self.ann_paths[i])
+
+                else:
+                    self.imgs.append(img_path)
+                    self.imgs.append(self.ann_paths[i])
+            else:
+                self.img_dict[name] = img
+                self.ann_dict[name] = ann
             if not self.random_sampling:
                 height = img.shape[0]
                 width = img.shape[1]
@@ -64,6 +84,18 @@ class BaseDataset(Dataset):
                             up = height - self.height
                         self.infos.append([name, up, left])
 
+        if self.balance_class:
+            mean_num = np.mean(
+                [len(class_name) for class_name in classes_img_paths])
+            for i in range(len(self.classes)):
+                class_img_paths = np.array(classes_img_paths[i])
+                class_ann_paths = np.array(classes_ann_paths[i])
+                if len(classes_img_paths[i]) > 0:
+                    choices = np.random.choice(
+                        len(classes_img_paths[i]), int(mean_num))
+                    self.imgs.extend(class_img_paths[choices])
+                    self.anns.extend(class_ann_paths[choices])
+
     def _load_data(self, data_root):
         names = os.listdir(os.path.join(data_root, 'images'))
         img_paths = [os.path.join(data_root, 'images', name) for name in names]
@@ -73,7 +105,11 @@ class BaseDataset(Dataset):
         return img_paths, ann_paths
 
     def _get_data_info(self, idx):
-        if not self.random_sampling:
+        if self.use_path:
+            img = self.imgs[idx]
+            ann = self.anns[idx]
+            input_dict = dict(img_path=img, ann_path=ann)
+        elif not self.random_sampling:
             info = self.infos[idx]
             name, up, left = info
             img = self.img_dict[name][up:up + self.height,
@@ -111,5 +147,7 @@ class BaseDataset(Dataset):
     def __len__(self):
         if self.random_sampling:
             return len(self.img_paths) * self.repeat
+        elif self.use_path:
+            return len(self.imgs)
         else:
             return len(self.infos)

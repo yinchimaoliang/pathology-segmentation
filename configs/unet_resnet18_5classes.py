@@ -17,7 +17,9 @@ data = dict(
     train=dict(
         type='BaseDataset',
         data_root='./data/cropped/train',
+        classes=class_names,
         pipeline=[
+            dict(type='Loading', shape=(512, 512)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -35,7 +37,8 @@ data = dict(
         width=512,
         height=512,
         stride=512,
-    ),
+        use_path=True,
+        balance_class=True),
     valid=dict(
         type='BaseDataset',
         data_root='./data/cropped/valid',
@@ -53,7 +56,7 @@ data = dict(
     ),
     test=dict(
         type='BaseDataset',
-        data_root='./data/cropped/valid',
+        data_root='./data/cropped/test',
         pipeline=[
             dict(
                 type='Formating',

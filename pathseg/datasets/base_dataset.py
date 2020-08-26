@@ -37,7 +37,7 @@ class BaseDataset(Dataset):
         self.repeat = repeat
         self._get_info()
         self._set_group_flag()
-        if self.random_sampling:
+        if self.random_sampling or self.use_path:
             self.length = len(self.img_paths)
         else:
             self.length = len(self.infos)
@@ -69,30 +69,30 @@ class BaseDataset(Dataset):
             else:
                 self.img_dict[name] = img
                 self.ann_dict[name] = ann
-            if not self.random_sampling:
-                height = img.shape[0]
-                width = img.shape[1]
-                for i in range(int(ceil(height / self.stride))):
-                    for j in range(int(ceil(width / self.stride))):
-                        if j * self.stride + self.width < width:
-                            left = j * self.stride
-                        else:
-                            left = width - self.width
-                        if i * self.stride + self.height < height:
-                            up = i * self.stride
-                        else:
-                            up = height - self.height
-                        self.infos.append([name, up, left])
+                if not self.random_sampling:
+                    height = img.shape[0]
+                    width = img.shape[1]
+                    for i in range(int(ceil(height / self.stride))):
+                        for j in range(int(ceil(width / self.stride))):
+                            if j * self.stride + self.width < width:
+                                left = j * self.stride
+                            else:
+                                left = width - self.width
+                            if i * self.stride + self.height < height:
+                                up = i * self.stride
+                            else:
+                                up = height - self.height
+                            self.infos.append([name, up, left])
 
         if self.balance_class:
-            mean_num = np.mean(
+            max_num = np.max(
                 [len(class_name) for class_name in classes_img_paths])
             for i in range(len(self.classes)):
                 class_img_paths = np.array(classes_img_paths[i])
                 class_ann_paths = np.array(classes_ann_paths[i])
                 if len(classes_img_paths[i]) > 0:
                     choices = np.random.choice(
-                        len(classes_img_paths[i]), int(mean_num))
+                        len(classes_img_paths[i]), int(max_num))
                     self.imgs.extend(class_img_paths[choices])
                     self.anns.extend(class_ann_paths[choices])
 

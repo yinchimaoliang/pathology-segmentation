@@ -60,17 +60,17 @@ class BaseDataset(Dataset):
             ann = cv.imread(self.ann_paths[i], 0)
             if self.use_path:
                 if self.balance_class:
-                    if np.sum(ann == 0) < ann.shape[0] * ann.shape[1]:
+                    if np.sum(ann == 0) == ann.shape[0] * ann.shape[1]:
                         if np.random.random() < self.drop_prob:
                             continue
-                        for i in range(len(self.classes)):
-                            if np.sum(ann == i) > 100:
-                                classes_img_paths[i].append(img_path)
-                                classes_ann_paths[i].append(self.ann_paths[i])
+                    for i in range(len(self.classes)):
+                        if np.sum(ann == i) > 100:
+                            classes_img_paths[i].append(img_path)
+                            classes_ann_paths[i].append(self.ann_paths[i])
 
                 else:
                     self.imgs.append(img_path)
-                    self.imgs.append(self.ann_paths[i])
+                    self.anns.append(self.ann_paths[i])
             else:
                 self.img_dict[name] = img
                 self.ann_dict[name] = ann

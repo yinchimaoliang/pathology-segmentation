@@ -22,7 +22,8 @@ class BaseDataset(Dataset):
                  height=512,
                  repeat=1,
                  balance_class=False,
-                 use_path=False):
+                 use_path=False,
+                 drop_prob=0.8):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
@@ -30,6 +31,7 @@ class BaseDataset(Dataset):
         self.classes = classes
         self.balance_class = balance_class
         self.use_path = use_path
+        self.drop_prob = drop_prob
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
         self.stride = stride
         self.width = width
@@ -58,10 +60,13 @@ class BaseDataset(Dataset):
             ann = cv.imread(self.ann_paths[i], 0)
             if self.use_path:
                 if self.balance_class:
-                    for i in range(len(self.classes)):
-                        if np.sum(ann == i) > 100:
-                            classes_img_paths[i].append(img_path)
-                            classes_ann_paths[i].append(self.ann_paths[i])
+                    if np.sum(ann == 0) < ann.shape[0] * ann.shape[1]:
+                        if np.random.random() < self.drop_prob:
+                            continue
+                        for i in range(len(self.classes)):
+                            if np.sum(ann == i) > 100:
+                                classes_img_paths[i].append(img_path)
+                                classes_ann_paths[i].append(self.ann_paths[i])
 
                 else:
                     self.imgs.append(img_path)

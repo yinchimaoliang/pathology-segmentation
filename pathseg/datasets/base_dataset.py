@@ -56,10 +56,9 @@ class BaseDataset(Dataset):
             classes_ann_paths = [[] for _ in range(len(self.classes))]
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
-            img = cv.imread(img_path)
-            ann = cv.imread(self.ann_paths[i], 0)
             if self.use_path:
                 if self.balance_class:
+                    ann = cv.imread(self.ann_paths[i], 0)
                     if np.sum(ann == 0) == ann.shape[0] * ann.shape[1]:
                         if np.random.random() < self.drop_prob:
                             continue
@@ -72,6 +71,8 @@ class BaseDataset(Dataset):
                     self.imgs.append(img_path)
                     self.anns.append(self.ann_paths[i])
             else:
+                img = cv.imread(img_path)
+                ann = cv.imread(self.ann_paths[i], 0)
                 self.img_dict[name] = img
                 self.ann_dict[name] = ann
                 if not self.random_sampling:

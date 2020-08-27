@@ -52,6 +52,7 @@ data = dict(
         width=512,
         height=512,
         stride=512,
+        use_path=True,
     ),
     test=dict(
         type='BaseDataset',

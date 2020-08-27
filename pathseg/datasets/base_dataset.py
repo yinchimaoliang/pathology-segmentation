@@ -64,7 +64,7 @@ class BaseDataset(Dataset):
                         if np.random.random() < self.drop_prob:
                             continue
                     for i in range(len(self.classes)):
-                        if np.sum(ann == i) > 100:
+                        if np.sum(ann == i) > 0:
                             classes_img_paths[i].append(img_path)
                             classes_ann_paths[i].append(self.ann_paths[i])
 
@@ -96,8 +96,14 @@ class BaseDataset(Dataset):
                 class_img_paths = np.array(classes_img_paths[i])
                 class_ann_paths = np.array(classes_ann_paths[i])
                 if len(classes_img_paths[i]) > 0:
-                    choices = np.random.choice(
-                        len(classes_img_paths[i]), int(max_num))
+                    if len(classes_img_paths[i]) >= int(max_num):
+                        choices = np.random.choice(
+                            len(classes_img_paths[i]),
+                            int(max_num),
+                            replace=False)
+                    else:
+                        choices = np.random.choice(
+                            len(classes_img_paths[i]), int(max_num))
                     self.imgs.extend(class_img_paths[choices])
                     self.anns.extend(class_ann_paths[choices])
 

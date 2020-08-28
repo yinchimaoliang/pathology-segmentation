@@ -23,7 +23,7 @@ class BaseDataset(Dataset):
                  repeat=1,
                  balance_class=False,
                  use_path=False,
-                 drop_prob=0.8):
+                 drop_prob=0.95):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)

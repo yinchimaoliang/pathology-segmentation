@@ -51,9 +51,7 @@ data = dict(
         random_sampling=False,
         width=512,
         height=512,
-        stride=512,
-        use_path=True,
-    ),
+        stride=512),
     test=dict(
         type='BaseDataset',
         data_root='./data/cropped/train',

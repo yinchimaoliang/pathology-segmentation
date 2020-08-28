@@ -3,7 +3,7 @@ model = dict(
     type='UNet',
     encoder=dict(
         type='UnetEncoder',
-        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
+        backbone=dict(type='ResNet', name='resnet18', weights=None),
     ),
     decoder=dict(
         type='UnetDecoder',

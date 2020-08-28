@@ -62,10 +62,13 @@ class BaseDataset(Dataset):
                     if np.sum(ann == 0) == ann.shape[0] * ann.shape[1]:
                         if np.random.random() < self.drop_prob:
                             continue
-                    for i in range(len(self.classes)):
-                        if np.sum(ann == i) > 0:
-                            classes_img_paths[i].append(img_path)
-                            classes_ann_paths[i].append(self.ann_paths[i])
+                        else:
+                            self.imgs.append(img_path)
+                            self.anns.append(self.ann_paths[i])
+                    for j in range(len(self.classes)):
+                        if np.sum(ann == j) > 0:
+                            classes_img_paths[j].append(img_path)
+                            classes_ann_paths[j].append(self.ann_paths[i])
 
                 else:
                     self.imgs.append(img_path)

@@ -76,5 +76,5 @@ class Crop():
 
 
 if __name__ == '__main__':
-    crop = Crop('./data/test', './data/cropped/test', stride=512)
+    crop = Crop('./data/valid', './data/cropped/valid', stride=512)
     crop.main_func()

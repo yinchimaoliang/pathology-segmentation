@@ -56,7 +56,7 @@ data = dict(
     ),
     test=dict(
         type='BaseDataset',
-        data_root='./data/cropped/train',
+        data_root='./data/cropped/valid',
         pipeline=[
             dict(
                 type='Formating',
@@ -73,7 +73,7 @@ data = dict(
 train = dict(
     loss=dict(type='BCEDiceLoss'),
     optimizer=dict(type='Adam', lr=0.002, weight_decay=0.0001),
-    scheduler=dict(step_size=10, gamma=0.1))
+    scheduler=dict(step_size=15, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
 

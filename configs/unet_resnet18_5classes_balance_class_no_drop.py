@@ -3,7 +3,7 @@ model = dict(
     type='UNet',
     encoder=dict(
         type='UnetEncoder',
-        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
+        backbone=dict(type='ResNet', name='resnet18', weights=None),
     ),
     decoder=dict(
         type='UnetDecoder',
@@ -37,10 +37,12 @@ data = dict(
         width=512,
         height=512,
         stride=512,
-        use_path=True),
+        use_path=True,
+        balance_class=True,
+        drop_prob=0.0),
     valid=dict(
         type='BaseDataset',
-        data_root='./data/cropped/train',
+        data_root='./data/cropped/valid',
         pipeline=[
             dict(
                 type='Formating',
@@ -51,7 +53,8 @@ data = dict(
         random_sampling=False,
         width=512,
         height=512,
-        stride=512),
+        stride=512,
+    ),
     test=dict(
         type='BaseDataset',
         data_root='./data/cropped/valid',
@@ -71,7 +74,7 @@ data = dict(
 train = dict(
     loss=dict(type='BCEDiceLoss'),
     optimizer=dict(type='Adam', lr=0.002, weight_decay=0.0001),
-    scheduler=dict(step_size=10, gamma=0.1))
+    scheduler=dict(step_size=15, gamma=0.1))
 
 valid = dict(evals=['Dsc', 'Iou'])
 

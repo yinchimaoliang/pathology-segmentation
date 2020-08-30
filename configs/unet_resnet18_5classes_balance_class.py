@@ -41,7 +41,7 @@ data = dict(
         balance_class=True),
     valid=dict(
         type='BaseDataset',
-        data_root='./data/cropped/train',
+        data_root='./data/cropped/valid',
         pipeline=[
             dict(
                 type='Formating',

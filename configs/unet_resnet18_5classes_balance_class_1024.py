@@ -1,6 +1,6 @@
 class_names = ['inflammation', 'low', 'high', 'carcinoma']
 model = dict(
-    type='NNUNet',
+    type='UNet',
     encoder=dict(
         type='UnetEncoder',
         backbone=dict(type='ResNet', name='resnet18', weights=None),

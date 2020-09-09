@@ -34,10 +34,6 @@ class Crop():
             # print(f'2: {np.sum(ann==2)}')
             # print(f'3: {np.sum(ann==3)}')
             # print(f'4: {np.sum(ann==4)}')
-            if np.sum(ann > 4) > self.height * self.width / 2:
-                continue
-            else:
-                ann[ann > 4] = 0
             height = img.shape[0]
             width = img.shape[1]
             for i in range(int(ceil(height / self.stride))):
@@ -50,14 +46,20 @@ class Crop():
                         up = i * self.stride
                     else:
                         up = height - self.height
+                    img_cropped = img[up:up + self.height,
+                                      left:left + self.width, :]
+                    ann_cropped = ann[up:up + self.height,
+                                      left:left + self.width]
+                    if np.sum(ann_cropped > 4) > self.width * self.height / 50:
+                        continue
+                    else:
+                        ann_cropped[ann_cropped > 4] = 0
                     cv.imwrite(
                         os.path.join(self.target_root, 'images',
-                                     f'{name}_{up}_{left}.png'),
-                        img[up:up + self.height, left:left + self.width, :])
+                                     f'{name}_{up}_{left}.png'), img_cropped)
                     cv.imwrite(
                         os.path.join(self.target_root, 'annotations',
-                                     f'{name}_{up}_{left}.png'),
-                        ann[up:up + self.height, left:left + self.width])
+                                     f'{name}_{up}_{left}.png'), ann_cropped)
 
     def _get_infos(self):
         names = os.listdir(os.path.join(self.data_root, 'images'))
@@ -76,5 +78,10 @@ class Crop():
 
 
 if __name__ == '__main__':
-    crop = Crop('./data/valid', './data/cropped/valid', stride=512)
+    crop = Crop(
+        './data/valid',
+        './data/cropped_1024/valid',
+        width=1024,
+        height=1024,
+        stride=1024)
     crop.main_func()

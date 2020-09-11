@@ -80,8 +80,8 @@ class Crop():
 if __name__ == '__main__':
     crop = Crop(
         './data/valid',
-        './data/cropped_1024/valid',
-        width=1024,
-        height=1024,
-        stride=1024)
+        './data/cropped_512/valid',
+        width=512,
+        height=512,
+        stride=512)
     crop.main_func()

@@ -12,14 +12,14 @@ model = dict(
 
 data = dict(
     class_names=class_names,
-    samples_per_gpu=10,
+    samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
         data_root='./data/cropped_1024/train',
         classes=class_names,
         pipeline=[
-            dict(type='Loading', shape=(512, 512)),
+            dict(type='Loading', shape=(1024, 1024)),
             dict(
                 type='Flip',
                 prob=.5,
@@ -34,9 +34,9 @@ data = dict(
                 num_classes=len(class_names) + 1)
         ],
         random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
+        width=1024,
+        height=1024,
+        stride=1024,
         use_path=True,
         balance_class=True),
     valid=dict(
@@ -56,7 +56,7 @@ data = dict(
     ),
     test=dict(
         type='BaseDataset',
-        data_root='./data/cropped_1024/valid',
+        data_root='./data/cropped_1024/train',
         pipeline=[
             dict(
                 type='Formating',

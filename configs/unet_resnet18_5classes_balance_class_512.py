@@ -56,7 +56,7 @@ data = dict(
     ),
     test=dict(
         type='BaseDataset',
-        data_root='./data/cropped_512/valid',
+        data_root='./data/cropped_512/train',
         pipeline=[
             dict(
                 type='Formating',

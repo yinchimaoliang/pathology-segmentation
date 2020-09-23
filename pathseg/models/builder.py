@@ -5,6 +5,8 @@ BACKBONES = Registry('backbone')
 ENCODERS = Registry('encoder')
 DECODERS = Registry('decoder')
 SEGMENTERS = Registry('segmenter')
+HEADS = Registry('head')
+REGRESSORS = Registry('regressor')
 LOSSES = Registry('loss')
 
 
@@ -36,3 +38,11 @@ def build_segmenter(cfg):
 
 def build_loss(cfg):
     return build(cfg, LOSSES)
+
+
+def build_head(cfg):
+    return build(cfg, HEADS)
+
+
+def build_regressor(cfg):
+    return build(cfg, REGRESSORS)

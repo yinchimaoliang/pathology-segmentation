@@ -1,5 +1,3 @@
-import numpy as np
-import torch
 import torchvision.transforms as tfs
 
 from pathseg.datasets.builder import PIPELINES
@@ -21,9 +19,6 @@ class Formating():
             tfs.Normalize(self.mean, self.std)
         ])
         img = im_tfs(img)
-        ann = np.eye(self.num_classes, dtype=np.bool)[ann]
-        ann = ann.transpose(2, 0, 1)
-        ann = torch.from_numpy(ann)
 
         results['image'] = img
         results['annotation'] = ann

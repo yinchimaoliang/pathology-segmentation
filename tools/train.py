@@ -15,7 +15,7 @@ from tensorboardX import SummaryWriter
 from pathseg.core.evals import build_eval
 from pathseg.core.optimizers import build_optimizer
 from pathseg.datasets import build_dataloader, build_dataset
-from pathseg.models import build_loss, build_segmenter
+from pathseg.models import build_loss, build_regressor
 from pathseg.utils import collect_env, get_root_logger
 
 
@@ -84,7 +84,7 @@ class Train():
         mmcv.mkdir_or_exist(self.valid_tb_log_path)
         self.train_tb_log = SummaryWriter(self.train_tb_log_path)
         self.valid_tb_log = SummaryWriter(self.valid_tb_log_path)
-        self.segmenter = build_segmenter(self.cfg.model)
+        self.regressor = build_regressor(self.cfg.model)
         self.train_dataset = build_dataset(self.cfg.data.train)
         self.valid_dataset = build_dataset(self.cfg.data.valid)
         print('Train dataset : %d' % len(self.train_dataset))
@@ -96,7 +96,7 @@ class Train():
             self.cfg.data.workers_per_gpu)
         self.max_dsc = 0
         self.criterion = build_loss(self.cfg.train.loss)
-        self.optim = build_optimizer(self.segmenter, self.cfg.train.optimizer)
+        self.optim = build_optimizer(self.regressor, self.cfg.train.optimizer)
         self.scheduler = torch.optim.lr_scheduler.StepLR(
             self.optim,
             step_size=self.cfg.train.scheduler.step_size,
@@ -119,14 +119,14 @@ class Train():
                                                   False)
             # Sets the `find_unused_parameters` parameter in
             # torch.nn.parallel.DistributedDataParallel
-            self.segmenter = MMDistributedDataParallel(
-                self.segmenter.cuda(),
+            self.regressor = MMDistributedDataParallel(
+                self.regressor.cuda(),
                 device_ids=[torch.cuda.current_device()],
                 broadcast_buffers=False,
                 find_unused_parameters=find_unused_parameters)
         else:
-            self.segmenter = MMDataParallel(
-                self.segmenter.cuda(self.args.gpu_ids[0]),
+            self.regressor = MMDataParallel(
+                self.regressor.cuda(self.args.gpu_ids[0]),
                 device_ids=self.args.gpu_ids)
 
     def train_one_epoch(self, tbar):
@@ -143,7 +143,7 @@ class Train():
             self.optim.zero_grad()
             images = ret_dict['image'].to(self.device)
             annotation = ret_dict['annotation'].to(self.device)
-            outputs = self.segmenter(images)
+            outputs = self.regressor(images)
             loss = self.criterion(outputs, annotation)
             losses.append(loss.data.cpu().numpy())
             pbar.update()
@@ -159,7 +159,7 @@ class Train():
 
     def save_ckpt(self, epoch):
         optim_state = self.optim.state_dict()
-        model_state = self.segmenter.module.state_dict()
+        model_state = self.regressor.module.state_dict()
         ckpt_state = dict(
             epoch=epoch, model_state=model_state, optim_state=optim_state)
         ckpt_dir = os.path.join(self.output_dir, 'ckpt')
@@ -191,7 +191,7 @@ class Train():
             self.tb_log.add_scalar(key, val, epoch)
 
     def valid_one_epoch(self, epoch, class_names):
-        self.segmenter.eval()
+        self.regressor.eval()
         self.name_mask = {}
         self.name_anno = {}
         names = os.listdir(
@@ -219,7 +219,7 @@ class Train():
             images = ret_dict['image'].to(self.device)
             annotations = ret_dict['annotation'].to(self.device)
             with torch.no_grad():
-                outputs = self.segmenter(images)
+                outputs = self.regressor(images)
             loss = self.criterion(outputs, annotations)
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
@@ -251,7 +251,7 @@ class Train():
 
         pbar.close()
         self.save_ckpt(epoch + 1)
-        self.segmenter.train()
+        self.regressor.train()
 
     def main_func(self):
         env_info_dict = collect_env()
@@ -259,7 +259,7 @@ class Train():
         dash_line = '-' * 60 + '\n'
         self.logger.info('Environment info:\n' + dash_line + env_info + '\n' +
                          dash_line)
-        self.logger.info(self.segmenter)
+        self.logger.info(self.regressor)
         with tqdm.trange(0, self.args.epochs, desc='epochs') as tbar:
             for cur_epoch in tbar:
                 loss = self.train_one_epoch(tbar)

@@ -1,32 +1,30 @@
 class_names = ['inflammation', 'low', 'high', 'carcinoma']
 model = dict(
-    type='UNet',
-    encoder=dict(
-        type='UnetEncoder',
-        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
-    ),
-    decoder=dict(
-        type='UnetDecoder',
-        decoder_channels=(512, 256, 128, 64, 64),
-        final_channels=len(class_names) + 1))
+    type='BaseRegressor',
+    backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
+    head=dict(
+        type='RegHead',
+        feature_shape=(16, 16),
+        in_channels=512,
+        num_class=len(class_names)))
 
 data = dict(
     class_names=class_names,
-    samples_per_gpu=10,
-    workers_per_gpu=4,
+    samples_per_gpu=1,
+    workers_per_gpu=0,
     train=dict(
         type='BaseDataset',
         data_root='./tests/data',
         classes=class_names,
         pipeline=[
-            dict(type='Loading', shape=(512, 512), num_class=5),
-            dict(
-                type='Flip',
-                prob=.5,
-                flip_ratio_horizontal=.5,
-                flip_ratio_vertical=.5),
-            dict(type='ShiftScaleRotate', prob=.5),
-            dict(type='RandomRotate90', prob=.5),
+            dict(type='Loading', shape=(512, 512), num_class=len(class_names)),
+            # dict(
+            #     type='Flip',
+            #     prob=.5,
+            #     flip_ratio_horizontal=.5,
+            #     flip_ratio_vertical=.5),
+            # dict(type='ShiftScaleRotate', prob=.5),
+            # dict(type='RandomRotate90', prob=.5),
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],

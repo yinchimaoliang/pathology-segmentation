@@ -10,7 +10,7 @@ from mmcv import Config
 
 from pathseg.core.evals import build_eval
 from pathseg.datasets import build_dataloader, build_dataset
-from pathseg.models import build_segmenter
+from pathseg.models import build_regressor
 
 
 def parge_config():
@@ -45,11 +45,11 @@ class Test():
         self.class_num = len(self.cfg.data.class_names) + 1
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
-        self.segmenter = build_segmenter(self.cfg.model)
-        self.segmenter.eval()
-        self.segmenter.to(self.device)
+        self.regressor = build_regressor(self.cfg.model)
+        self.regressor.eval()
+        self.regressor.to(self.device)
         state_dict = torch.load(self.args.ckpt_path)['model_state']
-        self.segmenter.load_state_dict(state_dict)
+        self.regressor.load_state_dict(state_dict)
         self.test_dataset = build_dataset(self.cfg.data.test)
         self.test_data_loader = build_dataloader(self.test_dataset,
                                                  self.cfg.data.samples_per_gpu,
@@ -114,7 +114,7 @@ class Test():
             images = ret_dict['image'].to(self.device)
             annotations = ret_dict['annotation'].to(self.device)
             with torch.no_grad():
-                outputs = self.segmenter(images)
+                outputs = self.regressor(images)
             annotations = annotations.cpu().numpy()
             outputs = outputs[0].data.cpu().numpy()
             info = ret_dict['info']

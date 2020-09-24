@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 from ..builder import HEADS
@@ -14,4 +13,4 @@ class RegHead(nn.Module):
         self.softmax = nn.Softmax()
 
     def forward(self, x):
-        return self.softmax(self.reg(torch.flatten(x)))
+        return self.softmax(self.reg(x.view(x.shape[0], -1)))

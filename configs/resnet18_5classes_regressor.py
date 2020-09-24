@@ -67,7 +67,7 @@ data = dict(
     ))
 
 train = dict(
-    loss=dict(type='BCEDiceLoss'),
+    loss=dict(type='SmoothL1Loss'),
     optimizer=dict(type='Adam', lr=0.002, weight_decay=0.0001),
     scheduler=dict(step_size=10, gamma=0.1))
 

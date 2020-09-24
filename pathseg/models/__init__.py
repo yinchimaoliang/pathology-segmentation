@@ -2,6 +2,7 @@ from .backbones import *  # noqa: F403, F401
 from .builder import build_backbone  # noqa: F401
 from .builder import build_decoder  # noqa: F401
 from .builder import build_encoder  # noqa: F401
+from .builder import build_head  # noqa: F401
 from .builder import build_loss  # noqa: F401
 from .builder import build_regressor  # noqa: F401
 from .builder import build_segmenter  # noqa: F401

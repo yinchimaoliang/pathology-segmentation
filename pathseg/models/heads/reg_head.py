@@ -11,6 +11,7 @@ class RegHead(nn.Module):
         super().__init__()
         self.reg = nn.Linear(feature_shape[0] * feature_shape[1] * in_channels,
                              num_class)
+        self.softmax = nn.Softmax()
 
     def forward(self, x):
-        return self.reg(torch.flatten(x))
+        return self.softmax(self.reg(torch.flatten(x)))

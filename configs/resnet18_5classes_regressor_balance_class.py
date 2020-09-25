@@ -14,7 +14,7 @@ data = dict(
     workers_per_gpu=0,
     train=dict(
         type='BaseDataset',
-        data_root='./tests/data',
+        data_root='./data/cropped_512/train',
         classes=class_names,
         pipeline=[
             dict(type='Loading', shape=(512, 512), num_class=len(class_names)),
@@ -32,13 +32,14 @@ data = dict(
                 num_classes=len(class_names) + 1)
         ],
         random_sampling=False,
+        balance_class=True,
         width=512,
         height=512,
         stride=512,
         use_path=True),
     valid=dict(
         type='BaseDataset',
-        data_root='./tests/data',
+        data_root='./data/cropped_512/valid',
         pipeline=[
             dict(type='Loading', shape=(512, 512), num_class=len(class_names)),
             dict(
@@ -54,7 +55,7 @@ data = dict(
         stride=512),
     test=dict(
         type='BaseDataset',
-        data_root='./tests/data',
+        data_root='./data/cropped_512/valid',
         pipeline=[
             dict(
                 type='Formating',

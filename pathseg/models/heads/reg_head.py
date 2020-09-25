@@ -10,7 +10,7 @@ class RegHead(nn.Module):
         super().__init__()
         self.reg = nn.Linear(feature_shape[0] * feature_shape[1] * in_channels,
                              num_class)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Sigmoid()
 
     def forward(self, x):
         return self.softmax(self.reg(x.view(x.shape[0], -1)))

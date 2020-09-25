@@ -10,6 +10,7 @@ class MAE():
         self.num_class = num_class
         self.maes = []
         self.num = 0
+        self.name = 'MAE'
 
     def step(self, pr, gt):
         mae = np.abs(pr - gt)

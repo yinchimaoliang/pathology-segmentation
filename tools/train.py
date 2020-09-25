@@ -2,7 +2,6 @@ import argparse
 import os
 import time
 
-import cv2 as cv
 import mmcv
 import numpy as np
 import torch
@@ -167,17 +166,15 @@ class Train():
         ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
-    def evaluation(self, names, epoch, class_names):
+    def evaluation(self, outputs, annotations, epoch, class_names):
         eval_dict = {}
         evals = [
             build_eval(dict(type=eval_name, num_class=self.class_num))
             for eval_name in self.cfg.valid.evals
         ]
         for eval in evals:
-            for name in names:
-                eval.step(
-                    np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
-                    np.array([self.name_anno[name]]).transpose(0, 3, 1, 2))
+            for i, output in enumerate(outputs):
+                eval.step(output, annotations[i])
         for eval in evals:
             for i, class_name in enumerate(class_names):
                 print(f'{eval.name}_{class_name}', eval.get_result()[i])
@@ -194,16 +191,6 @@ class Train():
         self.regressor.eval()
         self.name_mask = {}
         self.name_anno = {}
-        names = os.listdir(
-            os.path.join(self.cfg.data.valid.data_root, 'images'))
-        for img_name in names:
-            img = cv.imread(
-                os.path.join(self.cfg.data.valid.data_root, 'images',
-                             img_name), 0)
-            self.name_mask[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
-            self.name_anno[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
         total_it_each_epoch = len(self.valid_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -214,6 +201,8 @@ class Train():
         #     build_eval(dict(type=eval_name, class_num=self.class_num))
         #     for eval_name in self.cfg.valid.evals
         # ]
+        output_list = []
+        annotation_list = []
         disp_dict = dict()
         for ind, ret_dict in enumerate(self.valid_data_loader):
             images = ret_dict['image'].to(self.device)
@@ -223,12 +212,15 @@ class Train():
             loss = self.criterion(outputs, annotations)
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
-            outputs = outputs[0].data.cpu().numpy()
-
+            outputs = outputs.data.cpu().numpy()
+            for output in outputs:
+                output_list.append(output)
+            for annotation in annotations:
+                annotation_list.append(annotation)
             pbar.update()
             pbar.set_postfix(disp_dict)
 
-        self.evaluation(names, epoch, class_names)
+        self.evaluation(output_list, annotation_list, epoch, class_names)
         print('\n')
 
         pbar.close()

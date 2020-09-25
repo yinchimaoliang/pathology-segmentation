@@ -8,13 +8,13 @@ def test_iou():
 
     iou = build_eval(iou_cfg)
 
-    pred = np.array([[[[0.6, 0.6], [0.6, 0.6]], [[0.4, 0.4], [0.4, 0.4]]],
-                     [[[0.4, 0.4], [0.4, 0.4]], [[0.6, 0.6], [0.6, 0.6]]]])
+    pred = np.array([[[[1, 0], [0, 1]], [[1, 0], [0, 1]]],
+                     [[[0, 1], [1, 0]], [[0, 1], [1, 0]]]])
     gt = np.array([[[[1, 1], [1, 1]], [[0, 0], [0, 0]]],
                    [[[1, 1], [0, 0]], [[0, 0], [1, 1]]]])
 
     result = iou.step(pred, gt)
-    assert abs(result - 0.5) < 1e-3
+    assert np.isclose(result, 0.2)
 
 
 def test_dsc():

@@ -170,7 +170,7 @@ class Train():
     def evaluation(self, names, epoch, class_names):
         eval_dict = {}
         evals = [
-            build_eval(dict(type=eval_name, class_num=self.class_num))
+            build_eval(dict(type=eval_name, num_class=self.class_num))
             for eval_name in self.cfg.valid.evals
         ]
         for eval in evals:
@@ -224,24 +224,6 @@ class Train():
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
             outputs = outputs[0].data.cpu().numpy()
-            outputs = np.eye(
-                self.class_num, dtype=np.bool)[np.argmax(
-                    outputs.transpose(0, 2, 3, 1), axis=3)]
-            annotations = annotations.transpose(0, 2, 3, 1)
-            info = ret_dict['info']
-            # for eval in evals:
-            #     disp_dict[eval.name] = np.mean
-            #     (eval.step(outputs, annotations))
-            for i, output in enumerate(outputs):
-                name = info[0][i]
-                up = info[1][i].numpy()
-                left = info[2][i].numpy()
-                self.name_mask[name][
-                    up:up + self.cfg.data.valid.height,
-                    left:left + self.cfg.data.valid.width, :] += outputs[i]
-                self.name_anno[name][
-                    up:up + self.cfg.data.valid.height,
-                    left:left + self.cfg.data.valid.width, :] = annotations[i]
 
             pbar.update()
             pbar.set_postfix(disp_dict)

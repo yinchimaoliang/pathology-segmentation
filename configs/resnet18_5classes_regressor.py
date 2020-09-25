@@ -40,12 +40,14 @@ data = dict(
         type='BaseDataset',
         data_root='./tests/data',
         pipeline=[
+            dict(type='Loading', shape=(512, 512), num_class=len(class_names)),
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
                 num_classes=len(class_names) + 1)
         ],
+        use_path=True,
         random_sampling=False,
         width=512,
         height=512,
@@ -71,12 +73,12 @@ train = dict(
     optimizer=dict(type='Adam', lr=0.002, weight_decay=0.0001),
     scheduler=dict(step_size=10, gamma=0.1))
 
-valid = dict(evals=['Dsc', 'Iou'])
+valid = dict(evals=['MAE'])
 
 test = dict(
     colors=[[0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0]],
     weight=0.2,
-    evals=['Dsc', 'Iou'])
+    evals=['MAE'])
 
 log_level = 'INFO'
 

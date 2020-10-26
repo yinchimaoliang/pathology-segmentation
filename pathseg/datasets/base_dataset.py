@@ -68,7 +68,8 @@ class BaseDataset(Dataset):
         names = os.listdir(os.path.join(data_root, 'images'))
         img_paths = [os.path.join(data_root, 'images', name) for name in names]
         ann_paths = [
-            os.path.join(data_root, 'annotations', name) for name in names
+            os.path.join(data_root, 'annotations',
+                         name.split('.')[0] + '_mask.png') for name in names
         ]
         return img_paths, ann_paths
 

@@ -2,7 +2,7 @@ model = dict(
     type='UNet',
     encoder=dict(
         type='UnetEncoder',
-        backbone=dict(type='ResNet', name='resnet18', weights='imagenet'),
+        backbone=dict(type='ResNet', name='resnet152', weights='imagenet'),
     ),
     decoder=dict(
         type='UnetDecoder',
@@ -11,7 +11,7 @@ model = dict(
 
 data = dict(
     class_names=['Inflammation', 'Low', 'High', 'Cercinoma'],
-    samples_per_gpu=10,
+    samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
         type='BaseDataset',

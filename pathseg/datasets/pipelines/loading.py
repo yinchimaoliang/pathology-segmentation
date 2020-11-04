@@ -17,8 +17,14 @@ class Loading(object):
         ann = cv.imread(ann_path, 0)
 
         if self.shape is not None:
-            img = cv.resize(img, self.shape)
-            ann = cv.resize(ann, self.shape)
+            if isinstance(self.shape, float):
+                img = cv.resize(img, (int(img.shape[1] * self.shape),
+                                      int(img.shape[0] * self.shape)))
+                ann = cv.resize(ann, (int(ann.shape[1] * self.shape),
+                                      int(ann.shape[0] * self.shape)))
+            else:
+                img = cv.resize(img, self.shape)
+                ann = cv.resize(ann, self.shape)
 
         results['image'] = img
         results['annotation'] = ann

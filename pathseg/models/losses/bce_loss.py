@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch.nn.functional as F
 
 from ..builder import LOSSES
 
@@ -20,6 +21,8 @@ class BCELoss(nn.Module):
         loss = 0
         if type(outputs).__name__ == 'list':
             for output in outputs:
+                output = F.interpolate(
+                    output, size=[annotation.shape[2], annotation.shape[3]])
                 loss += self.bce_loss(output, annotation)
         else:
             loss += self.bce_loss(outputs, annotation)

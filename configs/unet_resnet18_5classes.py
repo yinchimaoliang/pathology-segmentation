@@ -11,12 +11,13 @@ model = dict(
 
 data = dict(
     class_names=['Inflammation', 'Low', 'High', 'Cercinoma'],
-    samples_per_gpu=10,
-    workers_per_gpu=4,
+    samples_per_gpu=1,
+    workers_per_gpu=1,
     train=dict(
         type='BaseDataset',
         data_root='./data/train',
         pipeline=[
+            dict(type='Loading', shape=1 / 8),
             dict(
                 type='Flip',
                 prob=.5,
@@ -30,6 +31,7 @@ data = dict(
                 std=[0.1, 0.1, 0.1],
                 num_classes=5)
         ],
+        use_patch=False,
         random_sampling=False,
         width=512,
         height=512,

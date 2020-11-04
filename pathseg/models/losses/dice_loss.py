@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from ..builder import LOSSES
 
@@ -47,6 +48,7 @@ class DiceLoss(nn.Module):
         if threshold is not None:
             pr = (pr > threshold).float()
 
+        pr = F.interpolate(pr, size=[gt.shape[2], gt.shape[3]])
         tp = torch.sum(gt * pr)
         fp = torch.sum(pr) - tp
         fn = torch.sum(gt) - tp

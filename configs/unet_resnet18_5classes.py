@@ -32,26 +32,20 @@ data = dict(
                 num_classes=5)
         ],
         use_patch=False,
-        random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
-    ),
+        random_sampling=False),
     valid=dict(
         type='BaseDataset',
         data_root='./data/valid',
         pipeline=[
+            dict(type='Loading', shape=1 / 8),
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
                 std=[0.1, 0.1, 0.1],
                 num_classes=5)
         ],
-        random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
-    ),
+        use_patch=False,
+        random_sampling=False),
     test=dict(
         type='BaseDataset',
         data_root='./data/test',

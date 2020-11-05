@@ -71,17 +71,21 @@ class BaseDataset(Dataset):
                         self.infos.append([name, up, left])
 
     def _load_data(self, data_root):
-        names = os.listdir(os.path.join(data_root, 'images'))
-        img_paths = [os.path.join(data_root, 'images', name) for name in names]
+        self.names = os.listdir(os.path.join(data_root, 'images'))
+        img_paths = [
+            os.path.join(data_root, 'images', name) for name in self.names
+        ]
         ann_paths = [
             os.path.join(data_root, 'annotations',
-                         name.split('.')[0] + '_mask.png') for name in names
+                         name.split('.')[0] + '_mask.png')
+            for name in self.names
         ]
         return img_paths, ann_paths
 
     def _get_data_info(self, idx):
         if self.use_patch:
             if not self.random_sampling:
+
                 info = self.infos[idx]
                 name, up, left = info
                 img = self.img_dict[name][up:up + self.height,
@@ -96,7 +100,9 @@ class BaseDataset(Dataset):
                 input_dict = dict(image=img, annotation=ann)
         else:
             input_dict = dict(
-                img_path=self.img_paths[idx], ann_path=self.ann_paths[idx])
+                img_path=self.img_paths[idx],
+                ann_path=self.ann_paths[idx],
+                name=self.names[idx])
         return input_dict
 
     def _prepare_data(self, idx):

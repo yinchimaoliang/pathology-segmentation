@@ -19,11 +19,9 @@ class Dsc():
         :param gt: [h, w, c]
         :return:
         """
-        pr = pr.transpose(0, 2, 3, 1)
-        gt = gt.transpose(0, 2, 3, 1)
         epsilon = 1e-6
-        inter = np.sum(np.bitwise_and(pr, gt), axis=(0, 1, 2))
-        union = np.sum(pr, axis=(0, 1, 2)) + np.sum(gt, axis=(0, 1, 2))
+        inter = np.sum(np.bitwise_and(pr, gt), axis=(0, 2, 3))
+        union = np.sum(pr, axis=(0, 2, 3)) + np.sum(gt, axis=(0, 2, 3))
         dsc = ((2. * inter + epsilon) / (union + epsilon))[1:]
         # print(iou)
         self.dscs.append(dsc)

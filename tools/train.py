@@ -177,8 +177,8 @@ class Train():
         for eval in evals:
             for name in names:
                 eval.step(
-                    np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
-                    np.array([self.name_anno[name]]).transpose(0, 3, 1, 2))
+                    np.array([self.name_mask[name]]),
+                    np.array([self.name_anno[name]]))
         for eval in evals:
             for i, class_name in enumerate(class_names):
                 print(f'{eval.name}_{class_name}', eval.get_result()[i])
@@ -228,9 +228,9 @@ class Train():
                                     (annotations.shape[2],
                                      annotations.shape[3])).data.cpu().numpy()
             outputs = np.eye(
-                self.class_num, dtype=np.bool)[np.argmax(
-                    outputs.transpose(0, 2, 3, 1), axis=3)]
-            annotations = annotations.transpose(0, 2, 3, 1)
+                self.class_num,
+                dtype=np.bool)[np.argmax(outputs,
+                                         axis=1)].transpose([0, 3, 1, 2])
             if 'info' in ret_dict.keys():
                 info = ret_dict['info']
                 for eval in evals:

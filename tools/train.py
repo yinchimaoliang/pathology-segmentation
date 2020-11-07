@@ -181,13 +181,15 @@ class Train():
                     np.array([self.name_anno[name]]))
         for eval in evals:
             for i, class_name in enumerate(class_names):
-                print(f'{eval.name}_{class_name}', eval.get_result()[i])
+                print(f'{eval.name}_{class_name}: {eval.get_result()[0][i]}   '
+                      f'{eval.get_result()[1][i]}')
                 # TODO: add name of each class.
                 self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
-                                             eval.get_result()[i], epoch)
-            print(f'm_{eval.name}', np.mean(eval.get_result()))
+                                             eval.get_result()[0][i], epoch)
+            print(f'm_{eval.name}: {np.mean(eval.get_result()[0])}   '
+                  f'{np.mean(eval.get_result()[1])}')
             self.valid_tb_log.add_scalar(f'm_{eval.name}',
-                                         np.mean(eval.get_result()), epoch)
+                                         np.mean(eval.get_result()[0]), epoch)
         for key, val in eval_dict.items():
             self.tb_log.add_scalar(key, val, epoch)
 

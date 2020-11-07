@@ -204,9 +204,9 @@ class Train():
                 os.path.join(self.cfg.data.valid.data_root, 'images',
                              img_name), 0)
             self.name_mask[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
+                (self.class_num, img.shape[0], img.shape[1]), dtype=np.bool)
             self.name_anno[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
+                (self.class_num, img.shape[0], img.shape[1]), dtype=np.bool)
         total_it_each_epoch = len(self.valid_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -242,12 +242,12 @@ class Train():
                     name = info[0][i]
                     up = info[1][i].numpy()
                     left = info[2][i].numpy()
-                    self.name_mask[name][
-                        up:up + self.cfg.data.valid.height,
-                        left:left + self.cfg.data.valid.width, :] += outputs[i]
-                    self.name_anno[name][
-                        up:up + self.cfg.data.valid.height, left:left +
-                        self.cfg.data.valid.width, :] = annotations[i]
+                    self.name_mask[name][:, up:up + self.cfg.data.valid.height,
+                                         left:left + self.cfg.data.valid.
+                                         width] += outputs[i]
+                    self.name_anno[name][:, up:up + self.cfg.data.valid.height,
+                                         left:left + self.cfg.data.valid.
+                                         width] = annotations[i]
             else:
                 for eval in evals:
                     disp_dict[eval.name] = np.mean(

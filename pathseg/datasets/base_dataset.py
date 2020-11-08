@@ -16,7 +16,7 @@ class BaseDataset(Dataset):
                  data_root,
                  pipeline=None,
                  classes=None,
-                 use_patch=False,
+                 use_patch=True,
                  random_sampling=False,
                  stride=512,
                  width=512,

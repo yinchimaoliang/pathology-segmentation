@@ -55,7 +55,7 @@ data = dict(
         stride=1024),
     test=dict(
         type='BaseDataset',
-        data_root='./data/test',
+        data_root='./data/valid',
         pipeline=[
             dict(
                 type='Formating',
@@ -64,6 +64,7 @@ data = dict(
                 num_classes=5)
         ],
         random_sampling=False,
+        use_patch=True,
         width=1024,
         height=1024,
         stride=1024,

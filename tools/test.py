@@ -70,8 +70,10 @@ class Test():
                                                                    2)))
         for eval in evals:
             for i, class_name in enumerate(class_names):
-                print(f'{eval.name}_{class_name}', eval.get_result()[i])
-            print(f'm_{eval.name}', np.mean(eval.get_result()))
+                print(f'{eval.name}_{class_name}: {eval.get_result()[0][i]}   '
+                      f'{eval.get_result()[1][i]}')
+            print(f'm_{eval.name}: {np.mean(eval.get_result()[0])}   '
+                  f'{np.mean(eval.get_result()[1])}')
 
     def show(self, task='results'):
         result_dir = os.path.join(self.output_dir, task)

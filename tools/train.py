@@ -165,7 +165,7 @@ class Train():
             epoch=epoch, model_state=model_state, optim_state=optim_state)
         ckpt_dir = os.path.join(self.output_dir, 'ckpt')
         mmcv.mkdir_or_exist(ckpt_dir)
-        ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
+        ckpt_name = os.path.join(ckpt_dir, ('checkpoint_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
     def evaluation(self, names, epoch, class_names):

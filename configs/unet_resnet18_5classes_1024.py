@@ -52,7 +52,7 @@ data = dict(
         stride=1024),
     test=dict(
         type='BaseDataset',
-        data_root='./data/test',
+        data_root='./data/valid',
         pipeline=[
             dict(
                 type='Formating',

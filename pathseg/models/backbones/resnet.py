@@ -404,7 +404,7 @@ class ResNet(nn.Module):
         self.dilations = dilations
         assert len(strides) == len(dilations) == num_stages
         self.out_indices = out_indices
-        assert max(out_indices) < num_stages
+        assert max(out_indices) <= num_stages
         self.style = style
         self.deep_stem = deep_stem
         self.avg_down = avg_down
@@ -629,18 +629,21 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         """Forward function."""
+
+        outs = []
         if self.deep_stem:
             x = self.stem(x)
         else:
             x = self.conv1(x)
             x = self.norm1(x)
             x = self.relu(x)
+        if 0 in self.out_indices:
+            outs.append(x)
         x = self.maxpool(x)
-        outs = []
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
             x = res_layer(x)
-            if i in self.out_indices:
+            if i + 1 in self.out_indices:
                 outs.append(x)
         return tuple(outs)
 

@@ -9,9 +9,9 @@ def test_resnet():
     norm_cfg = dict(type='BN', requires_grad=True)
     cfg = dict(
         type='ResNetV1c',
-        depth=50,
+        depth=18,
         num_stages=4,
-        out_indices=(0, 1, 2, 3),
+        out_indices=(0, 1, 2, 3, 4),
         dilations=(1, 1, 1, 1),
         strides=(1, 2, 2, 2),
         norm_cfg=norm_cfg,
@@ -28,8 +28,9 @@ def test_resnet():
     img = im_tfs(img)
     img = torch.unsqueeze(img, 0)
     outputs = resnet(img)
-    assert outputs[0].shape == torch.Size([1, 256, 32, 32])
-    assert outputs[1].shape == torch.Size([1, 512, 16, 16])
-    assert outputs[2].shape == torch.Size([1, 1024, 8, 8])
-    assert outputs[3].shape == torch.Size([1, 2048, 4, 4])
+    assert outputs[0].shape == torch.Size([1, 64, 64, 64])
+    assert outputs[1].shape == torch.Size([1, 256, 32, 32])
+    assert outputs[2].shape == torch.Size([1, 512, 16, 16])
+    assert outputs[3].shape == torch.Size([1, 1024, 8, 8])
+    assert outputs[4].shape == torch.Size([1, 2048, 4, 4])
     assert isinstance(resnet, ResNet)

@@ -6,6 +6,7 @@ ENCODERS = Registry('encoder')
 DECODERS = Registry('decoder')
 SEGMENTERS = Registry('segmenter')
 LOSSES = Registry('loss')
+HEADS = Registry('head')
 
 
 def build(cfg, registry, default_args=None):
@@ -28,6 +29,10 @@ def build_encoder(cfg):
 
 def build_decoder(cfg):
     return build(cfg, DECODERS)
+
+
+def build_head(cfg):
+    return build_head(cfg, HEADS)
 
 
 def build_segmenter(cfg):

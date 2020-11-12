@@ -8,10 +8,11 @@ class RandomSampling():
 
     # TODO: add OTSU
     # TODO: add no target zone situation
-    def __init__(self, prob_global, target_shape):
+    def __init__(self, prob_global, target_shape, filter_classes=[0]):
 
         self.prob_global = prob_global
         self.target_shape = target_shape
+        self.filter_classes = filter_classes
 
     def __call__(self, results):
         img = results['image']
@@ -26,7 +27,11 @@ class RandomSampling():
             y = np.random.randint(0, img.shape[1] - self.target_shape[1])
 
         else:
-            targets = np.transpose(np.array(np.where(ann > 0)), (1, 0))
+            candidate = np.ones_like(ann)
+            for filter_class in self.filter_classes:
+                if np.sum(np.bitwise_and(candidate, ann != filter_class)) > 0:
+                    candidate = np.bitwise_and(candidate, ann != filter_class)
+            targets = np.transpose(np.array(np.where(candidate > 0)), (1, 0))
             target = targets[np.random.randint(targets.shape[0])]
             x = np.random.randint(
                 max(0, target[0] - self.target_shape[0]),

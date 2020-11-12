@@ -11,7 +11,7 @@ model = dict(
 
 data = dict(
     class_names=[
-        'Inflammation', 'Low', 'High', 'Cercinoma', 'Indefinite1',
+        'Inflammation', 'Low', 'High', 'Carcinoma', 'Indefinite1',
         'Indefinite2', 'Indefinite3', 'Squashed'
     ],
     samples_per_gpu=10,

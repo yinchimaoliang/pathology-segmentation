@@ -10,7 +10,7 @@ model = dict(
         final_channels=5))
 
 data = dict(
-    class_names=['Inflammation', 'Low', 'High', 'Cercinoma'],
+    class_names=['Inflammation', 'Low', 'High', 'Carcinoma'],
     samples_per_gpu=2,
     workers_per_gpu=1,
     train=dict(

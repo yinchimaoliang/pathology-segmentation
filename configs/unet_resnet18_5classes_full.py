@@ -10,7 +10,7 @@ model = dict(
         final_channels=5))
 
 data = dict(
-    class_names=['Inflammation', 'Low', 'High', 'Cercinoma'],
+    class_names=['Inflammation', 'Low', 'High', 'Carcinoma'],
     samples_per_gpu=1,
     workers_per_gpu=1,
     train=dict(
@@ -50,6 +50,7 @@ data = dict(
         type='BaseDataset',
         data_root='./data/test',
         pipeline=[
+            dict(type='Loading', shape=1 / 8),
             dict(
                 type='Formating',
                 mean=[0.5, 0.5, 0.5],
@@ -57,10 +58,7 @@ data = dict(
                 num_classes=5)
         ],
         random_sampling=False,
-        width=512,
-        height=512,
-        stride=512,
-    ))
+        use_patch=False))
 
 train = dict(
     loss=dict(type='BCEDiceLoss'),

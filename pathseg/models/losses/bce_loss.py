@@ -27,10 +27,18 @@ class BCELoss(nn.Module):
                     output, size=[annotation.shape[2], annotation.shape[3]])
                 output = output.permute([0, 3, 2, 1])
                 annotation = annotation.permute([0, 3, 2, 1])
-                loss += torch.mean(
-                    output.new_tensor(self.pos_weight) *
-                    self.bce_loss(output, annotation))
+                if self.pos_weight is not None:
+                    loss += torch.mean(
+                        output.new_tensor(self.pos_weight) *
+                        self.bce_loss(output, annotation))
+                else:
+                    loss += torch.mean(self.bce_loss(output, annotation))
         else:
-            loss += self.bce_loss(outputs, annotation)
+            if self.pos_weight is not None:
+                loss += torch.mean(
+                    outputs.new_tensor(self.pos_weight) *
+                    self.bce_loss(outputs, annotation))
+            else:
+                loss += torch.mean(self.bce_loss(outputs, annotation))
 
         return loss

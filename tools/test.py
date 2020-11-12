@@ -5,6 +5,7 @@ import cv2 as cv
 import mmcv
 import numpy as np
 import torch
+import torch.nn.functional as F
 import tqdm
 from mmcv import Config
 
@@ -65,9 +66,8 @@ class Test():
                 print(
                     name, eval.name,
                     eval.step(
-                        np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
-                        np.array([self.name_anno[name]]).transpose(0, 3, 1,
-                                                                   2)))
+                        np.array([self.name_mask[name]]),
+                        np.array([self.name_anno[name]])))
         for eval in evals:
             for i, class_name in enumerate(class_names):
                 print(f'{eval.name}_{class_name}: {eval.get_result()[0][i]}   '
@@ -121,23 +121,31 @@ class Test():
             with torch.no_grad():
                 outputs = self.segmenter(images)
             annotations = annotations.cpu().numpy()
-            outputs = outputs[0].data.cpu().numpy()
-            info = ret_dict['info']
-            for i, output in enumerate(outputs):
-                name = info[0][i]
-                up = info[1][i].numpy()
-                left = info[2][i].numpy()
-                self.name_mask[name][up:up + self.cfg.data.test.height,
-                                     left:left +
-                                     self.cfg.data.test.width, :] += np.eye(
-                                         self.class_num,
-                                         dtype=np.bool)[np.argmax(
-                                             outputs[i].transpose(1, 2, 0),
-                                             axis=2)]
-                self.name_anno[name][
-                    up:up + self.cfg.data.test.height, left:left +
-                    self.cfg.data.test.width, :] = annotations[i].transpose(
-                        1, 2, 0)
+            outputs = F.interpolate(outputs[0],
+                                    (annotations.shape[2],
+                                     annotations.shape[3])).data.cpu().numpy()
+            outputs = np.eye(
+                self.class_num,
+                dtype=np.bool)[np.argmax(outputs,
+                                         axis=1)].transpose([0, 3, 1, 2])
+            if 'info' in ret_dict.keys():
+                info = ret_dict['info']
+                for i, output in enumerate(outputs):
+                    name = info[0][i]
+                    up = info[1][i].numpy()
+                    left = info[2][i].numpy()
+                    self.name_mask[name][up:up + self.cfg.data.test.height,
+                                         left:left +
+                                         self.cfg.data.test.width, :] += output
+                    self.name_anno[name][up:up + self.cfg.data.test.height,
+                                         left:left + self.cfg.data.test.
+                                         width, :] = annotations[i].transpose(
+                                             1, 2, 0)
+            else:
+                for i, output in enumerate(outputs):
+                    name = ret_dict['name'][i]
+                    self.name_mask[name] = output
+                    self.name_anno[name] = annotations[i]
 
             pbar.update()
             pbar.set_postfix(disp_dict)

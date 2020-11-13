@@ -1,6 +1,6 @@
 import torch.nn as nn
-from mmcv.cnn import ConvModule
 
+from pathseg.core.common.blocks import CenterBlock, DecoderBlock
 from ..builder import HEADS
 from .decode_head import BaseDecodeHead
 
@@ -8,28 +8,36 @@ from .decode_head import BaseDecodeHead
 @HEADS.register_module()
 class UNetHead(BaseDecodeHead):
 
-    def __init__(self, kernel_size=3, **kwargs):
+    def __init__(self, num_blocks=5, center=False, **kwargs):
         super(UNetHead, self).__init__(**kwargs)
 
-        in_channels = self.compute_channels(self.in_channels, self.channels)
+        assert len(
+            self.in_channels
+        ) == num_blocks, f'Model depth is {num_blocks}, but you provide ' \
+                         f'`decoder_channels` for ' \
+                         f'{len(self.in_channels)} blocks.'
+        encoder_channels = self.in_channels[::-1]
+        # computing blocks input and output channels
+        head_channels = encoder_channels[0]
+        decoder_channels = self.channels
+        in_channels = [head_channels] + list(decoder_channels[:-1])
+        skip_channels = list(encoder_channels[1:]) + [0]
+        out_channels = decoder_channels
 
-        convs = []
-        for i in range(len(in_channels)):
+        if center:
+            self.center = CenterBlock(head_channels, head_channels,
+                                      self.conv_cfg, self.norm_cfg,
+                                      self.act_cfg)
+        else:
+            self.center = nn.Identity()
 
-            convs.append(
-                ConvModule(
-                    in_channels[i],
-                    self.channels[i],
-                    kernel_size=kernel_size,
-                    padding=kernel_size // 2,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg,
-                    act_cfg=self.act_cfg))
-
-        self.conv_seg = nn.Conv2d(
-            self.channels[-1], self.num_classes, kernel_size=(1, 1))
-
-        self.initialize()
+        # combine decoder keyword arguments
+        blocks = [
+            DecoderBlock(in_ch, skip_ch, out_ch, self.conv_cfg, self.norm_cfg,
+                         self.act_cfg) for in_ch, skip_ch, out_ch in zip(
+                             in_channels, skip_channels, out_channels)
+        ]
+        self.blocks = nn.ModuleList(blocks)
 
     def compute_channels(self, encoder_channels, decoder_channels):
         channels = [
@@ -41,14 +49,17 @@ class UNetHead(BaseDecodeHead):
         ]
         return channels
 
-    def forward(self, x):
-        encoder_head = x[0]
-        skips = x[1:]
+    def forward(self, features):
 
-        x = self.layer1([encoder_head, skips[0]])
-        x = self.layer2([x, skips[1]])
-        x = self.layer3([x, skips[2]])
-        x = self.layer4([x, skips[3]])
-        x = self.layer5([x, None])
-        x = self.final_conv(x)
-        return [x]
+        # reverse channels to start from head of encoder
+        features = features[::-1]
+
+        head = features[0]
+        skips = features[1:]
+
+        x = self.center(head)
+        for i, decoder_block in enumerate(self.blocks):
+            skip = skips[i] if i < len(skips) else None
+            x = decoder_block(x, skip)
+
+        return x

@@ -1,5 +1,3 @@
-from abc import ABCMeta
-
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
@@ -7,7 +5,7 @@ from pathseg.ops import resize
 from ..builder import build_loss
 
 
-class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
+class BaseDecodeHead(nn.Module):
     """Base class for BaseDecodeHead.
 
     Args:

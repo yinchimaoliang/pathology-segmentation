@@ -32,7 +32,7 @@ def build_decoder(cfg):
 
 
 def build_head(cfg):
-    return build_head(cfg, HEADS)
+    return build(cfg, HEADS)
 
 
 def build_segmenter(cfg):

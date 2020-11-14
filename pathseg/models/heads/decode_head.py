@@ -61,6 +61,11 @@ class BaseDecodeHead(nn.Module):
             self.dropout = nn.Dropout2d(dropout_ratio)
         else:
             self.dropout = None
+        # self.conv_seg = nn.Conv2d(channels, num_classes, kernel_size=1)
+        if dropout_ratio > 0:
+            self.dropout = nn.Dropout2d(dropout_ratio)
+        else:
+            self.dropout = None
 
     def init_weights(self):
         """Initialize weights of classification layer."""
@@ -90,7 +95,7 @@ class BaseDecodeHead(nn.Module):
         losses = self.losses(seg_logits, gt_semantic_seg)
         return losses
 
-    def forward_test(self, inputs):
+    def forward_test(self, inputs, img_metas=None, test_cfg=None):
         """Forward function for testing.
 
         Args:

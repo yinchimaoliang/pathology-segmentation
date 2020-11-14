@@ -4,7 +4,7 @@ from torch import nn
 BACKBONES = Registry('backbone')
 ENCODERS = Registry('encoder')
 DECODERS = Registry('decoder')
-SEGMENTERS = Registry('segmenter')
+SEGMENTORS = Registry('segmentor')
 LOSSES = Registry('loss')
 HEADS = Registry('head')
 
@@ -36,7 +36,7 @@ def build_head(cfg):
 
 
 def build_segmenter(cfg):
-    return build(cfg, SEGMENTERS)
+    return build(cfg, SEGMENTORS)
 
 
 def build_loss(cfg):

@@ -26,4 +26,4 @@ def test_unet_head():
     input4 = torch.zeros([1, 512, 4, 4])
     inputs = [input0, input1, input2, input3, input4]
     outputs = decode_head(inputs)
-    assert outputs.shape == torch.Size([1, 64, 128, 128])
+    assert outputs.shape == torch.Size([1, 19, 128, 128])

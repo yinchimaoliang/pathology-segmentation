@@ -38,18 +38,10 @@ class UNetHead(BaseDecodeHead):
                              in_channels, skip_channels, out_channels)
         ]
         self.blocks = nn.ModuleList(blocks)
+        self.conv_seg = nn.Conv2d(
+            out_channels[-1], self.num_classes, kernel_size=1)
 
-    def compute_channels(self, encoder_channels, decoder_channels):
-        channels = [
-            encoder_channels[0] + encoder_channels[1],
-            encoder_channels[2] + decoder_channels[0],
-            encoder_channels[3] + decoder_channels[1],
-            encoder_channels[4] + decoder_channels[2],
-            0 + decoder_channels[3],
-        ]
-        return channels
-
-    def forward(self, features):
+    def forward(self, features, img_metas=None, test_cfg=None):
 
         # reverse channels to start from head of encoder
         features = features[::-1]
@@ -61,5 +53,5 @@ class UNetHead(BaseDecodeHead):
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
-
-        return x
+        output = self.conv_seg(x)
+        return output

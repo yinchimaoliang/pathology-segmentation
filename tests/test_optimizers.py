@@ -1,7 +1,7 @@
 from torch.optim import SGD
 
 from pathseg.core.optimizers.builder import build_optimizer
-from pathseg.models.segmenters import UNet
+from pathseg.models.segmentors import UNet
 
 
 def test_sgd():

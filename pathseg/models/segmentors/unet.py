@@ -1,9 +1,9 @@
 import torch.nn as nn
 
-from ..builder import SEGMENTERS, build_decoder, build_encoder
+from ..builder import SEGMENTORS, build_decoder, build_encoder
 
 
-@SEGMENTERS.register_module()
+@SEGMENTORS.register_module()
 class UNet(nn.Module):
 
     def __init__(self, encoder, decoder, activation='softmax'):

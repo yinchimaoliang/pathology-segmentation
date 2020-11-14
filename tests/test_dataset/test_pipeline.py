@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from pathseg.datasets.pipelines import (Compose, LoadAnnotations,
-                                        LoadImageFromFile)
+                                        LoadImageFromFile, LoadPatch)
 
 
 class TestPipeline(object):
@@ -15,6 +15,27 @@ class TestPipeline(object):
     @classmethod
     def setup_class(cls):
         cls.data_prefix = osp.join(osp.dirname(__file__), '../data')
+
+    def test_load_patch(self):
+        img = mmcv.imread(osp.join(self.data_prefix, 'images', 'test.png'))
+        gt_semantic_seg = mmcv.imread(
+            osp.join(self.data_prefix, 'annotations', 'test.png'), 'grayscale')
+        results = dict(
+            img=img,
+            gt_semantic_seg=gt_semantic_seg,
+            img_prefix=osp.join(self.data_prefix, 'images'),
+            img_info=dict(
+                filename='test.png',
+                up=0,
+                left=0,
+                patch_width=512,
+                patch_height=512))
+        load_patch = LoadPatch()
+        results = load_patch(results)
+        img = results['img']
+        gt_semantic_seg = results['gt_semantic_seg']
+        assert img.shape == (512, 512, 3)
+        assert gt_semantic_seg.shape == (512, 512)
 
     def test_load_img(self):
         results = dict(

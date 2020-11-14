@@ -7,6 +7,45 @@ from ..builder import PIPELINES
 
 
 @PIPELINES.register_module()
+class LoadPatch(object):
+
+    def __init__(self, to_float32=False, reduce_zero_label=False):
+        self.to_float32 = to_float32
+        self.reduce_zero_label = reduce_zero_label
+
+    def __call__(self, results):
+        if results.get('img_prefix') is not None:
+            filename = osp.join(results['img_prefix'],
+                                results['img_info']['filename'])
+        else:
+            filename = results['img_info']['filename']
+
+        img = results['img']
+        gt_semantic_seg = results['gt_semantic_seg']
+        up = results['img_info']['up']
+        left = results['img_info']['left']
+        patch_height = results['img_info']['patch_height']
+        patch_width = results['img_info']['patch_width']
+
+        img = img[up:up + patch_height, left:left + patch_width, :]
+        gt_semantic_seg = gt_semantic_seg[up:up + patch_height,
+                                          left:left + patch_width]
+
+        if self.reduce_zero_label:
+            # avoid using underflow conversion
+            gt_semantic_seg[gt_semantic_seg == 0] = 255
+            gt_semantic_seg = gt_semantic_seg - 1
+            gt_semantic_seg[gt_semantic_seg == 254] = 255
+
+        results['filename'] = filename
+        results['ori_filename'] = results['img_info']['filename']
+        results['img'] = img
+        results['gt_semantic_seg'] = gt_semantic_seg
+
+        return results
+
+
+@PIPELINES.register_module()
 class LoadImageFromFile(object):
     """Load an image from file.
 

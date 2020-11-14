@@ -18,9 +18,10 @@ class BaseDataset(Dataset):
                  classes=None,
                  use_patch=True,
                  random_sampling=False,
-                 stride=512,
-                 width=512,
-                 height=512,
+                 horizontal_stride=512,
+                 vertical_stride=512,
+                 patch_width=512,
+                 patch_height=512,
                  repeat=1):
         super().__init__()
         self.data_root = data_root
@@ -29,9 +30,10 @@ class BaseDataset(Dataset):
         self.random_sampling = random_sampling
         self.classes = classes
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
-        self.stride = stride
-        self.width = width
-        self.height = height
+        self.horizontal_stride = horizontal_stride
+        self.vertical_stride = vertical_stride
+        self.patch_width = patch_width
+        self.patch_height = patch_height
         self.repeat = repeat
         if self.use_patch:
             self._get_info()
@@ -56,19 +58,23 @@ class BaseDataset(Dataset):
             self.img_dict[name] = img
             self.ann_dict[name] = ann
             if not self.random_sampling:
-                height = img.shape[0]
-                width = img.shape[1]
-                for i in range(int(ceil(height / self.stride))):
-                    for j in range(int(ceil(width / self.stride))):
-                        if j * self.stride + self.width < width:
-                            left = j * self.stride
+                img_height = img.shape[0]
+                img_width = img.shape[1]
+                for i in range(int(ceil(img_height / self.vertical_stride))):
+                    for j in range(
+                            int(ceil(img_width / self.horizontal_stride))):
+                        if j * self.horizontal_stride + self.patch_width \
+                                < img_width:
+                            left = j * self.horizontal_stride
                         else:
-                            left = width - self.width
-                        if i * self.stride + self.height < height:
-                            up = i * self.stride
+                            left = img_width - self.patch_width
+                        if i * self.stride + self.patch_height < img_height:
+                            up = i * self.vertical_stride
                         else:
-                            up = height - self.height
-                        self.infos.append([name, up, left])
+                            up = img_height - self.patch_height
+                        self.infos.append([
+                            name, up, left, self.patch_height, self.patch_width
+                        ])
 
     def _load_data(self, data_root):
         self.names = os.listdir(os.path.join(data_root, 'images'))
@@ -88,10 +94,10 @@ class BaseDataset(Dataset):
 
                 info = self.infos[idx]
                 name, up, left = info
-                img = self.img_dict[name][up:up + self.height,
-                                          left:left + self.width, :]
-                ann = self.ann_dict[name][up:up + self.height,
-                                          left:left + self.width]
+                img = self.img_dict[name][up:up + self.patch_height,
+                                          left:left + self.patch_width, :]
+                ann = self.ann_dict[name][up:up + self.patch_height,
+                                          left:left + self.patch_width]
                 input_dict = dict(image=img, annotation=ann, info=info)
             else:
                 img = list(self.img_dict.values())[idx]

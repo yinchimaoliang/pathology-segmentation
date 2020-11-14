@@ -5,6 +5,8 @@ from pathseg.datasets import BaseDataset, build_dataset
 
 
 def test_base_dataset():
+
+    # test no patch
     np.random.seed(0)
     img_norm_cfg = dict(
         mean=[123.675, 116.28, 103.53],

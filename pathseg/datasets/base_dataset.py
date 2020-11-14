@@ -100,9 +100,9 @@ class BaseDataset(Dataset):
                 input_dict = dict(image=img, annotation=ann)
         else:
             input_dict = dict(
-                img_path=self.img_paths[idx],
-                ann_path=self.ann_paths[idx],
-                name=self.names[idx])
+                img_info=dict(filename=self.img_paths[idx]),
+                ann_info=dict(seg_map=self.ann_paths[idx]),
+                seg_fields=[])
         return input_dict
 
     def _prepare_data(self, idx):

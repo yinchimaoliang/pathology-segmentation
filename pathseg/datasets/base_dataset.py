@@ -1,7 +1,7 @@
 import os
 from math import ceil
 
-import cv2 as cv
+import mmcv
 import numpy as np
 from torch.utils.data import Dataset
 
@@ -53,8 +53,8 @@ class BaseDataset(Dataset):
         self.infos = []
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
-            img = cv.imread(img_path)
-            ann = cv.imread(self.ann_paths[i], 0)
+            img = mmcv.imread(img_path)
+            ann = mmcv.imread(self.ann_paths[i], 'grayscale')
             self.img_dict[name] = img
             self.ann_dict[name] = ann
             if not self.random_sampling:
@@ -68,13 +68,18 @@ class BaseDataset(Dataset):
                             left = j * self.horizontal_stride
                         else:
                             left = img_width - self.patch_width
-                        if i * self.stride + self.patch_height < img_height:
+                        if i * self.vertical_stride + self.patch_height \
+                                < img_height:
                             up = i * self.vertical_stride
                         else:
                             up = img_height - self.patch_height
-                        self.infos.append([
-                            name, up, left, self.patch_height, self.patch_width
-                        ])
+                        self.infos.append(
+                            dict(
+                                filename=name,
+                                up=up,
+                                left=left,
+                                patch_height=self.patch_height,
+                                patch_width=self.patch_width))
 
     def _load_data(self, data_root):
         self.names = os.listdir(os.path.join(data_root, 'images'))
@@ -93,12 +98,15 @@ class BaseDataset(Dataset):
             if not self.random_sampling:
 
                 info = self.infos[idx]
-                name, up, left = info
-                img = self.img_dict[name][up:up + self.patch_height,
-                                          left:left + self.patch_width, :]
-                ann = self.ann_dict[name][up:up + self.patch_height,
-                                          left:left + self.patch_width]
-                input_dict = dict(image=img, annotation=ann, info=info)
+                filename = info['filename']
+                img = self.img_dict[filename]
+                ann = self.ann_dict[filename]
+                input_dict = dict(
+                    img_prefix=os.path.join(self.data_root, 'images'),
+                    img=img,
+                    gt_semantic_seg=ann,
+                    img_info=info,
+                )
             else:
                 img = list(self.img_dict.values())[idx]
                 ann = list(self.ann_dict.values())[idx]

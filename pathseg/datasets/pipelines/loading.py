@@ -26,6 +26,7 @@ class LoadPatch(object):
         left = results['img_info']['left']
         patch_height = results['img_info']['patch_height']
         patch_width = results['img_info']['patch_width']
+        results['ori_shape'] = img.shape
 
         img = img[up:up + patch_height, left:left + patch_width, :]
         gt_semantic_seg = gt_semantic_seg[up:up + patch_height,
@@ -41,6 +42,16 @@ class LoadPatch(object):
         results['ori_filename'] = results['img_info']['filename']
         results['img'] = img
         results['gt_semantic_seg'] = gt_semantic_seg
+        results['img_shape'] = img.shape
+
+        # Set initial values for default meta_keys
+        results['pad_shape'] = img.shape
+        results['scale_factor'] = 1.0
+        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
+        results['img_norm_cfg'] = dict(
+            mean=np.zeros(num_channels, dtype=np.float32),
+            std=np.ones(num_channels, dtype=np.float32),
+            to_rgb=False)
 
         return results
 

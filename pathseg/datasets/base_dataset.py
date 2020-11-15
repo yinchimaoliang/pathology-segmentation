@@ -80,6 +80,8 @@ class BaseDataset(Dataset):
                                 left=left,
                                 patch_height=self.patch_height,
                                 patch_width=self.patch_width))
+            else:
+                self.infos.append(dict(filename=name))
 
     def _load_data(self, data_root):
         self.names = os.listdir(os.path.join(data_root, 'images'))
@@ -106,12 +108,30 @@ class BaseDataset(Dataset):
                     img=img,
                     gt_semantic_seg=ann,
                     img_info=info,
-                )
+                    seg_fields=['gt_semantic_seg'])
             else:
+                info = self.infos[idx]
+                filename = os.path.join(self.data_root, 'images',
+                                        info['filename'])
+
                 img = list(self.img_dict.values())[idx]
                 ann = list(self.ann_dict.values())[idx]
-
-                input_dict = dict(image=img, annotation=ann)
+                num_channels = 1 if len(img.shape) < 3 else img.shape[2]
+                input_dict = dict(
+                    img_prefix=os.path.join(self.data_root, 'images'),
+                    filename=filename,
+                    ori_filename=info['filename'],
+                    ori_shape=img.shape,
+                    pad_shape=img.shape,
+                    scale_factor=1.0,
+                    img_norm_cfg=dict(
+                        mean=np.zeros(num_channels, dtype=np.float32),
+                        std=np.ones(num_channels, dtype=np.float32),
+                        to_rgb=False),
+                    img=img,
+                    gt_semantic_seg=ann,
+                    img_info=info,
+                    seg_fields=['gt_semantic_seg'])
         else:
             input_dict = dict(
                 img_info=dict(filename=self.img_paths[idx]),

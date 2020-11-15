@@ -43,6 +43,7 @@ def test_base_dataset():
     assert img.data.shape == torch.Size([3, 769, 769])
     assert gt_semantic_seg.data.shape == torch.Size([1, 769, 769])
 
+    # test patch
     pipelines = [
         dict(type='LoadPatch'),
         dict(type='RandomFlip', prob=0.5),
@@ -65,3 +66,28 @@ def test_base_dataset():
 
     assert img.shape == torch.Size([3, 512, 512])
     assert gt_semantic_seg.shape == torch.Size([1, 512, 512])
+
+    # test random sampling
+    pipelines = [
+        dict(type='RandomCrop', crop_size=crop_size, cat_max_ratio=0.75),
+        dict(type='RandomFlip', prob=0.5),
+        dict(type='PhotoMetricDistortion'),
+        dict(type='Normalize', **img_norm_cfg),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_semantic_seg']),
+    ]
+
+    cfg = dict(
+        type='BaseDataset',
+        data_root='./tests/data',
+        pipeline=pipelines,
+        use_patch=True,
+        random_sampling=True)
+
+    base_dataset = build_dataset(cfg)
+    sample = base_dataset[0]
+    img = sample['img'].data
+    gt_semantic_seg = sample['gt_semantic_seg'].data
+
+    assert img.shape == torch.Size([3, 769, 769])
+    assert gt_semantic_seg.shape == torch.Size([1, 769, 769])

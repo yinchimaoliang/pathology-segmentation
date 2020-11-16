@@ -4,7 +4,7 @@ act_cfg = dict(type='ReLU')
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-test_cfg = dict(mode='whole')
+test_cfg = dict(mode='slide', stride=[512, 512], crop_size=[512, 512])
 model = dict(
     type='EncoderDecoder',
     backbone=dict(
@@ -23,7 +23,7 @@ model = dict(
         in_channels=[64, 64, 128, 256, 512],
         channels=(256, 256, 128, 64, 64),
         dropout_ratio=0.1,
-        num_classes=19,
+        num_classes=5,
         conv_cfg=conv_cfg,
         norm_cfg=norm_cfg,
         act_cfg=act_cfg,
@@ -33,8 +33,8 @@ model = dict(
 
 data = dict(
     class_names=['background', 'Inflammation', 'Low', 'High', 'Carcinoma'],
-    samples_per_gpu=4,
-    workers_per_gpu=4,
+    samples_per_gpu=2,
+    workers_per_gpu=0,
     train=dict(
         type='BaseDataset',
         data_root='./data/small/train',
@@ -54,21 +54,27 @@ data = dict(
         type='BaseDataset',
         data_root='./data/small/valid',
         pipeline=[
-            dict(type='RandomCrop', crop_size=[512, 512], cat_max_ratio=0.75),
-            dict(type='RandomFlip', prob=0.5),
-            dict(type='PhotoMetricDistortion'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='DefaultFormatBundle'),
-            dict(type='Collect', keys=['img', 'gt_semantic_seg']),
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(2048, 1024),
+                img_ratios=[1.0],
+                flip=False,
+                transforms=[
+                    dict(type='RandomFlip'),
+                    dict(type='Normalize', **img_norm_cfg),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img']),
+                ]),
         ],
-        use_patch=True,
-        random_sampling=True,
-        repeat=100,
+        use_patch=False,
+        random_sampling=False,
         classes=['background', 'Inflammation', 'Low', 'High', 'Carcinoma']),
     test=dict(
         type='BaseDataset',
         data_root='./data/small/valid',
         pipeline=[
+            dict(type='LoadPatch'),
             dict(type='RandomCrop', crop_size=[512, 512], cat_max_ratio=0.75),
             dict(type='RandomFlip', prob=0.5),
             dict(type='PhotoMetricDistortion'),
@@ -107,7 +113,7 @@ lr_config = dict(policy='poly', power=0.9, min_lr=1e-4, by_epoch=False)
 # runtime settings
 runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
-evaluation = dict(interval=200, metric='mIoU')
+evaluation = dict(interval=50, metric='mIoU')
 train_cfg = dict()
 
 # yapf:disable

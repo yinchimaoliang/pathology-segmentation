@@ -9,7 +9,7 @@ import tqdm
 from mmcv import Config
 
 from pathseg.datasets import build_dataloader, build_dataset
-from pathseg.models import build_segmenter
+from pathseg.models import build_segmentor
 
 
 def parge_config():
@@ -59,7 +59,7 @@ class Inference():
         self.class_num = len(self.cfg.data.class_names) + 1
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output_dir = os.path.join('work_dirs', self.args.extra_tag)
-        self.segmenter = build_segmenter(self.cfg.model)
+        self.segmenter = build_segmentor(self.cfg.model)
         self.segmenter.to(self.device)
         state_dict = torch.load(self.args.ckpt_path)['model_state']
         self.segmenter.load_state_dict(state_dict)

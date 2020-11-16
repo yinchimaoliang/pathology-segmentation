@@ -11,18 +11,23 @@ from .pipelines import Compose
 
 @DATASETS.register_module()
 class BaseDataset(Dataset):
+    CLASSES = None
+
+    PALETTE = None
 
     def __init__(self,
                  data_root,
                  pipeline=None,
-                 classes=None,
                  use_patch=True,
                  random_sampling=False,
                  horizontal_stride=512,
                  vertical_stride=512,
                  patch_width=512,
                  patch_height=512,
-                 repeat=1):
+                 repeat=1,
+                 classes=None,
+                 palette=None,
+                 test_mode=False):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
@@ -34,10 +39,13 @@ class BaseDataset(Dataset):
         self.vertical_stride = vertical_stride
         self.patch_width = patch_width
         self.patch_height = patch_height
+        self.label_map = None
         self.repeat = repeat
         if self.use_patch:
             self._get_info()
         self._set_group_flag()
+        self.CLASSES, self.PALETTE = self.get_classes_and_palette(
+            classes, palette)
         if self.use_patch:
             if self.random_sampling:
                 self.length = len(self.img_paths)
@@ -45,6 +53,69 @@ class BaseDataset(Dataset):
                 self.length = len(self.infos)
         else:
             self.length = len(self.img_paths)
+
+    def get_classes_and_palette(self, classes=None, palette=None):
+        """Get class names of current dataset.
+
+        Args:
+            classes (Sequence[str] | str | None): If classes is None, use
+                default CLASSES defined by builtin dataset. If classes is a
+                string, take it as a file name. The file contains the name of
+                classes where each line contains one class name. If classes is
+                a tuple or list, override the CLASSES defined by the dataset.
+            palette (Sequence[Sequence[int]]] | np.ndarray | None):
+                The palette of segmentation map. If None is given, random
+                palette will be generated. Default: None
+        """
+        if classes is None:
+            self.custom_classes = False
+            return self.CLASSES, self.PALETTE
+
+        self.custom_classes = True
+        if isinstance(classes, str):
+            # take it as a file path
+            class_names = mmcv.list_from_file(classes)
+        elif isinstance(classes, (tuple, list)):
+            class_names = classes
+        else:
+            raise ValueError(f'Unsupported type {type(classes)} of classes.')
+
+        if self.CLASSES:
+            if not set(classes).issubset(self.CLASSES):
+                raise ValueError('classes is not a subset of CLASSES.')
+
+            # dictionary, its keys are the old label ids and its values
+            # are the new label ids.
+            # used for changing pixel labels in load_annotations.
+            self.label_map = {}
+            for i, c in enumerate(self.CLASSES):
+                if c not in class_names:
+                    self.label_map[i] = -1
+                else:
+                    self.label_map[i] = classes.index(c)
+
+        palette = self.get_palette_for_custom_classes(class_names, palette)
+
+        return class_names, palette
+
+    def get_palette_for_custom_classes(self, class_names, palette=None):
+
+        if self.label_map is not None:
+            # return subset of palette
+            palette = []
+            for old_id, new_id in sorted(
+                    self.label_map.items(), key=lambda x: x[1]):
+                if new_id != -1:
+                    palette.append(self.PALETTE[old_id])
+            palette = type(self.PALETTE)(palette)
+
+        elif palette is None:
+            if self.PALETTE is None:
+                palette = np.random.randint(0, 255, size=(len(class_names), 3))
+            else:
+                palette = self.PALETTE
+
+        return palette
 
     def _get_info(self):
         self.img_dict = {}

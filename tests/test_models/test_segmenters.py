@@ -2,7 +2,7 @@ import mmcv
 import torch
 import torchvision.transforms as tfs
 
-from pathseg.models import build_segmenter
+from pathseg.models import build_segmentor
 from pathseg.models.decoders import DeeplabV3PlusDecoder, UnetDecoder
 from pathseg.models.encoders import DeeplabV3PlusEncoder, UnetEncoder
 
@@ -20,7 +20,7 @@ def test_unet():
     cfg = dict(
         type='UNet', encoder=encoder, decoder=decoder, activation='softmax')
 
-    unet = build_segmenter(cfg)
+    unet = build_segmentor(cfg)
 
     assert isinstance(unet.encoder, UnetEncoder)
     assert isinstance(unet.decoder, UnetDecoder)
@@ -44,7 +44,7 @@ def test_deeplabv3plus():
             output_stride=16,
             final_channels=2))
 
-    deeplabv3plus = build_segmenter(deeplabv3plus_cfg)
+    deeplabv3plus = build_segmentor(deeplabv3plus_cfg)
     assert isinstance(deeplabv3plus.encoder, DeeplabV3PlusEncoder)
     assert isinstance(deeplabv3plus.decoder, DeeplabV3PlusDecoder)
 
@@ -87,7 +87,7 @@ def test_encoder_decoder():
         decode_head=unet_head,
         test_cfg=test_cfg)
 
-    encoder_decoder = build_segmenter(cfg)
+    encoder_decoder = build_segmentor(cfg)
 
     img = mmcv.imread('./tests/data/images/test.png')
     img = mmcv.imresize(img, (128, 128))

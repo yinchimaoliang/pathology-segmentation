@@ -47,7 +47,9 @@ class BaseDecodeHead(nn.Module):
                  loss_decode=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=False,
-                     loss_weight=1.0)):
+                     loss_weight=1.0),
+                 ignore_index=255,
+                 align_corners=False):
         super(BaseDecodeHead, self).__init__()
         self.in_channels = in_channels
         self.channels = channels
@@ -67,6 +69,10 @@ class BaseDecodeHead(nn.Module):
         else:
             self.dropout = None
 
+        self.sampler = None
+        self.ignore_index = ignore_index
+        self.align_corners = align_corners
+
     def init_weights(self):
         """Initialize weights of classification layer."""
         normal_init(self.conv_seg, mean=0, std=0.01)
@@ -75,7 +81,7 @@ class BaseDecodeHead(nn.Module):
         """Placeholder of forward function."""
         pass
 
-    def forward_train(self, inputs, gt_semantic_seg):
+    def forward_train(self, inputs, img_metas, gt_semantic_seg, train_cfg):
         """Forward function for training.
         Args:
             inputs (list[Tensor]): List of multi-level img features.
@@ -83,7 +89,7 @@ class BaseDecodeHead(nn.Module):
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
                 For details on the values of these keys see
-                `mmseg/datasets/pipelines/formatting.py:Collect`.
+                `pathseg/datasets/pipelines/formatting.py:Collect`.
             gt_semantic_seg (Tensor): Semantic segmentation masks
                 used if the architecture supports semantic segmentation task.
             train_cfg (dict): The training config.
@@ -104,7 +110,7 @@ class BaseDecodeHead(nn.Module):
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
                 For details on the values of these keys see
-                `mmseg/datasets/pipelines/formatting.py:Collect`.
+                `pathseg/datasets/pipelines/formatting.py:Collect`.
             test_cfg (dict): The testing config.
 
         Returns:

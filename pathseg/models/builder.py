@@ -35,8 +35,9 @@ def build_head(cfg):
     return build(cfg, HEADS)
 
 
-def build_segmenter(cfg):
-    return build(cfg, SEGMENTORS)
+def build_segmentor(cfg, train_cfg=None, test_cfg=None):
+    """Build segmentor."""
+    return build(cfg, SEGMENTORS, dict(train_cfg=train_cfg, test_cfg=test_cfg))
 
 
 def build_loss(cfg):

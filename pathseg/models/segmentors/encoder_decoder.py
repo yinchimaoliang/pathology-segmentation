@@ -25,7 +25,8 @@ class EncoderDecoder(BaseSegmentor):
                  auxiliary_head=None,
                  train_cfg=None,
                  test_cfg=None,
-                 pretrained=None):
+                 pretrained=None,
+                 **kwargs):
         super(EncoderDecoder, self).__init__()
         self.backbone = builder.build_backbone(backbone)
         if neck is not None:
@@ -119,7 +120,7 @@ class EncoderDecoder(BaseSegmentor):
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
                 For details on the values of these keys see
-                `mmseg/datasets/pipelines/formatting.py:Collect`.
+                `pathseg/datasets/pipelines/formatting.py:Collect`.
             gt_semantic_seg (Tensor): Semantic segmentation masks
                 used if the architecture supports semantic segmentation task.
 
@@ -206,7 +207,7 @@ class EncoderDecoder(BaseSegmentor):
                 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
                 For details on the values of these keys see
-                `mmseg/datasets/pipelines/formatting.py:Collect`.
+                `pathseg/datasets/pipelines/formatting.py:Collect`.
             rescale (bool): Whether rescale back to original shape.
 
         Returns:

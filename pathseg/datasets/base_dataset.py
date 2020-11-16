@@ -1,10 +1,14 @@
 import os
+import os.path as osp
+from functools import reduce
 from math import ceil
 
 import mmcv
 import numpy as np
+from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
+from pathseg.core import mean_iou
 from .builder import DATASETS
 from .pipelines import Compose
 
@@ -27,7 +31,9 @@ class BaseDataset(Dataset):
                  repeat=1,
                  classes=None,
                  palette=None,
-                 test_mode=False):
+                 test_mode=False,
+                 ignore_index=255,
+                 reduce_zero_label=False):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
@@ -53,6 +59,8 @@ class BaseDataset(Dataset):
                 self.length = len(self.infos)
         else:
             self.length = len(self.img_paths)
+        self.ignore_index = ignore_index
+        self.reduce_zero_label = reduce_zero_label
 
     def get_classes_and_palette(self, classes=None, palette=None):
         """Get class names of current dataset.
@@ -123,7 +131,7 @@ class BaseDataset(Dataset):
         # name, pos of the input
         self.infos = []
         for i, img_path in enumerate(self.img_paths):
-            name = os.path.split(img_path)[-1]
+            name = osp.split(img_path)[-1]
             img = mmcv.imread(img_path)
             ann = mmcv.imread(self.ann_paths[i], 'grayscale')
             self.img_dict[name] = img
@@ -155,14 +163,13 @@ class BaseDataset(Dataset):
                 self.infos.append(dict(filename=name))
 
     def _load_data(self, data_root):
-        self.names = os.listdir(os.path.join(data_root, 'images'))
+        self.names = os.listdir(osp.join(data_root, 'images'))
         img_paths = [
-            os.path.join(data_root, 'images', name) for name in self.names
+            osp.join(data_root, 'images', name) for name in self.names
         ]
         ann_paths = [
-            os.path.join(data_root, 'annotations',
-                         name.split('.')[0] + '_mask.png')
-            for name in self.names
+            osp.join(data_root, 'annotations',
+                     name.split('.')[0] + '_mask.png') for name in self.names
         ]
         return img_paths, ann_paths
 
@@ -175,21 +182,20 @@ class BaseDataset(Dataset):
                 img = self.img_dict[filename]
                 ann = self.ann_dict[filename]
                 input_dict = dict(
-                    img_prefix=os.path.join(self.data_root, 'images'),
+                    img_prefix=osp.join(self.data_root, 'images'),
                     img=img,
                     gt_semantic_seg=ann,
                     img_info=info,
                     seg_fields=['gt_semantic_seg'])
             else:
                 info = self.infos[idx]
-                filename = os.path.join(self.data_root, 'images',
-                                        info['filename'])
+                filename = osp.join(self.data_root, 'images', info['filename'])
 
                 img = list(self.img_dict.values())[idx]
                 ann = list(self.ann_dict.values())[idx]
                 num_channels = 1 if len(img.shape) < 3 else img.shape[2]
                 input_dict = dict(
-                    img_prefix=os.path.join(self.data_root, 'images'),
+                    img_prefix=osp.join(self.data_root, 'images'),
                     filename=filename,
                     ori_filename=info['filename'],
                     ori_shape=img.shape,
@@ -224,6 +230,86 @@ class BaseDataset(Dataset):
 
         """
         self.flag = np.zeros(len(self), dtype=np.uint8)
+
+    def get_gt_seg_maps(self):
+        """Get ground truth segmentation maps for evaluation."""
+        gt_seg_maps = []
+        for ann_path in self.ann_paths:
+            gt_seg_map = mmcv.imread(
+                ann_path, flag='grayscale', backend='pillow')
+            # modify if custom classes
+            if self.label_map is not None:
+                for old_id, new_id in self.label_map.items():
+                    gt_seg_map[gt_seg_map == old_id] = new_id
+            if self.reduce_zero_label:
+                # avoid using underflow conversion
+                gt_seg_map[gt_seg_map == 0] = 255
+                gt_seg_map = gt_seg_map - 1
+                gt_seg_map[gt_seg_map == 254] = 255
+
+            gt_seg_maps.append(gt_seg_map)
+
+        return gt_seg_maps
+
+    def evaluate(self, results, metric='mIoU', logger=None, **kwargs):
+        """Evaluate the dataset.
+
+        Args:
+            results (list): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated.
+            logger (logging.Logger | None | str): Logger used for printing
+                related information during evaluation. Default: None.
+
+        Returns:
+            dict[str, float]: Default metrics.
+        """
+
+        if not isinstance(metric, str):
+            assert len(metric) == 1
+            metric = metric[0]
+        allowed_metrics = ['mIoU']
+        if metric not in allowed_metrics:
+            raise KeyError('metric {} is not supported'.format(metric))
+
+        eval_results = {}
+        gt_seg_maps = self.get_gt_seg_maps()
+        if self.CLASSES is None:
+            num_classes = len(
+                reduce(np.union1d, [np.unique(_) for _ in gt_seg_maps]))
+        else:
+            num_classes = len(self.CLASSES)
+
+        all_acc, acc, iou = mean_iou(
+            results, gt_seg_maps, num_classes, ignore_index=self.ignore_index)
+        summary_str = ''
+        summary_str += 'per class results:\n'
+
+        line_format = '{:<15} {:>10} {:>10}\n'
+        summary_str += line_format.format('Class', 'IoU', 'Acc')
+        if self.CLASSES is None:
+            class_names = tuple(range(num_classes))
+        else:
+            class_names = self.CLASSES
+        for i in range(num_classes):
+            iou_str = '{:.2f}'.format(iou[i] * 100)
+            acc_str = '{:.2f}'.format(acc[i] * 100)
+            summary_str += line_format.format(class_names[i], iou_str, acc_str)
+        summary_str += 'Summary:\n'
+        line_format = '{:<15} {:>10} {:>10} {:>10}\n'
+        summary_str += line_format.format('Scope', 'mIoU', 'mAcc', 'aAcc')
+
+        iou_str = '{:.2f}'.format(np.nanmean(iou) * 100)
+        acc_str = '{:.2f}'.format(np.nanmean(acc) * 100)
+        all_acc_str = '{:.2f}'.format(all_acc * 100)
+        summary_str += line_format.format('global', iou_str, acc_str,
+                                          all_acc_str)
+        print_log(summary_str, logger)
+
+        eval_results['mIoU'] = np.nanmean(iou)
+        eval_results['mAcc'] = np.nanmean(acc)
+        eval_results['aAcc'] = all_acc
+
+        return eval_results
 
     def __getitem__(self, idx):
         sample = self._prepare_data(idx % self.length)

@@ -33,15 +33,14 @@ model = dict(
 
 data = dict(
     class_names=['background', 'Inflammation', 'Low', 'High', 'Carcinoma'],
-    samples_per_gpu=2,
-    workers_per_gpu=0,
+    samples_per_gpu=4,
+    workers_per_gpu=4,
     train=dict(
         type='BaseDataset',
-        data_root='./data/small/train',
+        data_root='./data/train',
         pipeline=[
             dict(type='RandomCrop', crop_size=[512, 512], cat_max_ratio=0.75),
             dict(type='RandomFlip', prob=0.5),
-            dict(type='PhotoMetricDistortion'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='DefaultFormatBundle'),
             dict(type='Collect', keys=['img', 'gt_semantic_seg']),
@@ -52,7 +51,7 @@ data = dict(
         classes=['background', 'Inflammation', 'Low', 'High', 'Carcinoma']),
     val=dict(
         type='BaseDataset',
-        data_root='./data/small/valid',
+        data_root='./data/valid',
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
@@ -72,7 +71,7 @@ data = dict(
         classes=['background', 'Inflammation', 'Low', 'High', 'Carcinoma']),
     test=dict(
         type='BaseDataset',
-        data_root='./data/small/valid',
+        data_root='./data/valid',
         pipeline=[
             dict(type='LoadPatch'),
             dict(type='RandomCrop', crop_size=[512, 512], cat_max_ratio=0.75),
@@ -113,7 +112,7 @@ lr_config = dict(policy='poly', power=0.9, min_lr=1e-4, by_epoch=False)
 # runtime settings
 runner = dict(type='IterBasedRunner', max_iters=20000)
 checkpoint_config = dict(by_epoch=False, interval=2000)
-evaluation = dict(interval=50, metric='mIoU')
+evaluation = dict(interval=200, metric='mIoU')
 train_cfg = dict()
 
 # yapf:disable

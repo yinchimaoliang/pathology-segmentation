@@ -21,13 +21,16 @@ class BaseDataset(Dataset):
                  stride=512,
                  width=512,
                  height=512,
-                 repeat=1):
+                 repeat=1,
+                 scale=1):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
         self.use_patch = use_patch
         self.random_sampling = random_sampling
         self.classes = classes
+
+        self.scale = scale
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
         self.stride = stride
         self.width = width
@@ -52,7 +55,13 @@ class BaseDataset(Dataset):
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
             img = cv.imread(img_path)
+            img = cv.resize(
+                img,
+                tuple(int(self.scale * _) for _ in img.shape[:2])[::-1])
             ann = cv.imread(self.ann_paths[i], 0)
+            ann = cv.resize(
+                ann,
+                tuple(int(self.scale * _) for _ in ann.shape[:2])[::-1])
             self.img_dict[name] = img
             self.ann_dict[name] = ann
             if not self.random_sampling:

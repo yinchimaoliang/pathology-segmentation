@@ -19,9 +19,9 @@ data = dict(
         pipeline=[
             dict(
                 type='RandomSampling',
-                prob_global=.1,
+                prob_global=.5,
                 target_shape=(1024, 1024),
-                filter_classes=[0]),
+                filter_classes=[0, 1]),
             dict(
                 type='Flip',
                 prob=.5,

@@ -54,6 +54,7 @@ class BaseDataset(Dataset):
         self.infos = []
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
+            print(f'{name} loaded.')
             img = cv.imread(img_path)
             img = cv.resize(
                 img,

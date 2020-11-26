@@ -21,12 +21,12 @@ def parge_config():
     parser.add_argument(
         '--train_ratio',
         type=float,
-        default=0.6,
+        default=0.8,
         help='specify the target path')
     parser.add_argument(
         '--valid_ratio',
         type=float,
-        default=0.5,
+        default=0.3,
         help='specify the target path')
     args = parser.parse_args()
     return args
@@ -67,8 +67,7 @@ class DivideDataset():
                 os.path.join(self.root_path, 'images', name),
                 os.path.join(self.target_path, 'train', 'images', name))
             shutil.copyfile(
-                os.path.join(self.root_path, 'annotations_processed',
-                             ann_name),
+                os.path.join(self.root_path, 'annotations_manual', ann_name),
                 os.path.join(self.target_path, 'train', 'annotations',
                              ann_name))
         for name in valid_names:
@@ -78,8 +77,7 @@ class DivideDataset():
                 os.path.join(self.root_path, 'images', name),
                 os.path.join(self.target_path, 'valid', 'images', name))
             shutil.copyfile(
-                os.path.join(self.root_path, 'annotations_processed',
-                             ann_name),
+                os.path.join(self.root_path, 'annotations_manual', ann_name),
                 os.path.join(self.target_path, 'valid', 'annotations',
                              ann_name))
         for name in test_names:
@@ -89,8 +87,7 @@ class DivideDataset():
                 os.path.join(self.root_path, 'images', name),
                 os.path.join(self.target_path, 'test', 'images', name))
             shutil.copyfile(
-                os.path.join(self.root_path, 'annotations_processed',
-                             ann_name),
+                os.path.join(self.root_path, 'annotations_manual', ann_name),
                 os.path.join(self.target_path, 'test', 'annotations',
                              ann_name))
 

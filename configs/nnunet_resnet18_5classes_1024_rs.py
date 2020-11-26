@@ -11,11 +11,11 @@ model = dict(
 
 data = dict(
     class_names=['Inflammation', 'Low', 'High', 'Carcinoma'],
-    samples_per_gpu=4,
-    workers_per_gpu=4,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type='BaseDataset',
-        data_root='./data/small/train',
+        data_root='./data/train',
         pipeline=[
             dict(
                 type='RandomSampling',
@@ -41,7 +41,7 @@ data = dict(
         scale=1 / 4),
     valid=dict(
         type='BaseDataset',
-        data_root='./data/small/valid',
+        data_root='./data/valid',
         pipeline=[
             dict(
                 type='Formating',

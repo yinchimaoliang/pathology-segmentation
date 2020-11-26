@@ -11,17 +11,17 @@ model = dict(
 
 data = dict(
     class_names=['Inflammation', 'Low', 'High', 'Carcinoma'],
-    samples_per_gpu=4,
-    workers_per_gpu=4,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type='BaseDataset',
         data_root='./data/train',
         pipeline=[
             dict(
                 type='RandomSampling',
-                prob_global=.1,
+                prob_global=.5,
                 target_shape=(1024, 1024),
-                filter_classes=[0]),
+                filter_classes=[0, 1]),
             dict(
                 type='Flip',
                 prob=.5,
@@ -73,9 +73,7 @@ data = dict(
     ))
 
 train = dict(
-    loss=dict(
-        type='BCEDiceLoss', reduction='none', pos_weight=[0.1, 1, 10, 10,
-                                                          100]),
+    loss=dict(type='BCEDiceLoss', reduction='none'),
     optimizer=dict(type='Adam', lr=0.001, weight_decay=0.0001),
     scheduler=dict(step_size=10, gamma=0.1))
 

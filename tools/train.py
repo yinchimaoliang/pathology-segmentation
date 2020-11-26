@@ -6,6 +6,7 @@ import cv2 as cv
 import mmcv
 import numpy as np
 import torch
+import torch.nn.functional as F
 import tqdm
 from mmcv import Config
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
@@ -164,7 +165,7 @@ class Train():
             epoch=epoch, model_state=model_state, optim_state=optim_state)
         ckpt_dir = os.path.join(self.output_dir, 'ckpt')
         mmcv.mkdir_or_exist(ckpt_dir)
-        ckpt_name = os.path.join(ckpt_dir, ('checkout_epoch_%d.pth' % epoch))
+        ckpt_name = os.path.join(ckpt_dir, ('checkpoint_epoch_%d.pth' % epoch))
         torch.save(ckpt_state, ckpt_name)
 
     def evaluation(self, names, epoch, class_names):
@@ -176,17 +177,19 @@ class Train():
         for eval in evals:
             for name in names:
                 eval.step(
-                    np.array([self.name_mask[name]]).transpose(0, 3, 1, 2),
-                    np.array([self.name_anno[name]]).transpose(0, 3, 1, 2))
+                    np.array([self.name_mask[name]]),
+                    np.array([self.name_anno[name]]))
         for eval in evals:
             for i, class_name in enumerate(class_names):
-                print(f'{eval.name}_{class_name}', eval.get_result()[i])
+                print(f'{eval.name}_{class_name}: {eval.get_result()[0][i]}   '
+                      f'{eval.get_result()[1][i]}')
                 # TODO: add name of each class.
                 self.valid_tb_log.add_scalar(f'{eval.name}_{class_name}',
-                                             eval.get_result()[i], epoch)
-            print(f'm_{eval.name}', np.mean(eval.get_result()))
+                                             eval.get_result()[0][i], epoch)
+            print(f'm_{eval.name}: {np.mean(eval.get_result()[0])}   '
+                  f'{np.mean(eval.get_result()[1])}')
             self.valid_tb_log.add_scalar(f'm_{eval.name}',
-                                         np.mean(eval.get_result()), epoch)
+                                         np.mean(eval.get_result()[0]), epoch)
         for key, val in eval_dict.items():
             self.tb_log.add_scalar(key, val, epoch)
 
@@ -201,9 +204,9 @@ class Train():
                 os.path.join(self.cfg.data.valid.data_root, 'images',
                              img_name), 0)
             self.name_mask[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
+                (self.class_num, img.shape[0], img.shape[1]), dtype=np.bool)
             self.name_anno[img_name] = np.zeros(
-                (img.shape[0], img.shape[1], self.class_num), dtype=np.bool)
+                (self.class_num, img.shape[0], img.shape[1]), dtype=np.bool)
         total_it_each_epoch = len(self.valid_data_loader)
         pbar = tqdm.tqdm(
             total=total_it_each_epoch,
@@ -223,25 +226,36 @@ class Train():
             loss = self.criterion(outputs, annotations)
             disp_dict['loss'] = loss.item()
             annotations = annotations.cpu().numpy()
-            outputs = outputs[0].data.cpu().numpy()
+            outputs = F.interpolate(outputs[0],
+                                    (annotations.shape[2],
+                                     annotations.shape[3])).data.cpu().numpy()
             outputs = np.eye(
-                self.class_num, dtype=np.bool)[np.argmax(
-                    outputs.transpose(0, 2, 3, 1), axis=3)]
-            annotations = annotations.transpose(0, 2, 3, 1)
-            info = ret_dict['info']
-            for eval in evals:
-                disp_dict[eval.name] = np.mean(eval.step(outputs, annotations))
-            for i, output in enumerate(outputs):
-                name = info[0][i]
-                up = info[1][i].numpy()
-                left = info[2][i].numpy()
-                self.name_mask[name][
-                    up:up + self.cfg.data.valid.height,
-                    left:left + self.cfg.data.valid.width, :] += outputs[i]
-                self.name_anno[name][
-                    up:up + self.cfg.data.valid.height,
-                    left:left + self.cfg.data.valid.width, :] = annotations[i]
-
+                self.class_num,
+                dtype=np.bool)[np.argmax(outputs,
+                                         axis=1)].transpose([0, 3, 1, 2])
+            if 'info' in ret_dict.keys():
+                info = ret_dict['info']
+                for eval in evals:
+                    disp_dict[eval.name] = np.mean(
+                        eval.step(outputs, annotations))
+                for i, output in enumerate(outputs):
+                    name = info[0][i]
+                    up = info[1][i].numpy()
+                    left = info[2][i].numpy()
+                    self.name_mask[name][:, up:up + self.cfg.data.valid.height,
+                                         left:left + self.cfg.data.valid.
+                                         width] += outputs[i]
+                    self.name_anno[name][:, up:up + self.cfg.data.valid.height,
+                                         left:left + self.cfg.data.valid.
+                                         width] = annotations[i]
+            else:
+                for eval in evals:
+                    disp_dict[eval.name] = np.mean(
+                        eval.step(outputs, annotations))
+                for i, output in enumerate(outputs):
+                    name = ret_dict['name'][i]
+                    self.name_mask[name] = outputs[i]
+                    self.name_anno[name] = annotations[i]
             pbar.update()
             pbar.set_postfix(disp_dict)
 

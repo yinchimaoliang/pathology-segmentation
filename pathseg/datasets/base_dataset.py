@@ -16,27 +16,36 @@ class BaseDataset(Dataset):
                  data_root,
                  pipeline=None,
                  classes=None,
+                 use_patch=True,
                  random_sampling=False,
                  stride=512,
                  width=512,
                  height=512,
-                 repeat=1):
+                 repeat=1,
+                 scale=1):
         super().__init__()
         self.data_root = data_root
         self.pipeline = Compose(pipeline)
+        self.use_patch = use_patch
         self.random_sampling = random_sampling
         self.classes = classes
+
+        self.scale = scale
         self.img_paths, self.ann_paths = self._load_data(self.data_root)
         self.stride = stride
         self.width = width
         self.height = height
         self.repeat = repeat
-        self._get_info()
+        if self.use_patch:
+            self._get_info()
         self._set_group_flag()
-        if self.random_sampling:
-            self.length = len(self.img_paths)
+        if self.use_patch:
+            if self.random_sampling:
+                self.length = len(self.img_paths)
+            else:
+                self.length = len(self.infos)
         else:
-            self.length = len(self.infos)
+            self.length = len(self.img_paths)
 
     def _get_info(self):
         self.img_dict = {}
@@ -45,8 +54,15 @@ class BaseDataset(Dataset):
         self.infos = []
         for i, img_path in enumerate(self.img_paths):
             name = os.path.split(img_path)[-1]
+            print(f'{name} loaded.')
             img = cv.imread(img_path)
+            img = cv.resize(
+                img,
+                tuple(int(self.scale * _) for _ in img.shape[:2])[::-1])
             ann = cv.imread(self.ann_paths[i], 0)
+            ann = cv.resize(
+                ann,
+                tuple(int(self.scale * _) for _ in ann.shape[:2])[::-1])
             self.img_dict[name] = img
             self.ann_dict[name] = ann
             if not self.random_sampling:
@@ -65,27 +81,38 @@ class BaseDataset(Dataset):
                         self.infos.append([name, up, left])
 
     def _load_data(self, data_root):
-        names = os.listdir(os.path.join(data_root, 'images'))
-        img_paths = [os.path.join(data_root, 'images', name) for name in names]
+        self.names = os.listdir(os.path.join(data_root, 'images'))
+        img_paths = [
+            os.path.join(data_root, 'images', name) for name in self.names
+        ]
         ann_paths = [
-            os.path.join(data_root, 'annotations', name) for name in names
+            os.path.join(data_root, 'annotations',
+                         name.split('.')[0] + '_mask.png')
+            for name in self.names
         ]
         return img_paths, ann_paths
 
     def _get_data_info(self, idx):
-        if not self.random_sampling:
-            info = self.infos[idx]
-            name, up, left = info
-            img = self.img_dict[name][up:up + self.height,
-                                      left:left + self.width, :]
-            ann = self.ann_dict[name][up:up + self.height,
-                                      left:left + self.width]
-            input_dict = dict(image=img, annotation=ann, info=info)
-        else:
-            img = list(self.img_dict.values())[idx]
-            ann = list(self.ann_dict.values())[idx]
+        if self.use_patch:
+            if not self.random_sampling:
 
-            input_dict = dict(image=img, annotation=ann)
+                info = self.infos[idx]
+                name, up, left = info
+                img = self.img_dict[name][up:up + self.height,
+                                          left:left + self.width, :]
+                ann = self.ann_dict[name][up:up + self.height,
+                                          left:left + self.width]
+                input_dict = dict(image=img, annotation=ann, info=info)
+            else:
+                img = list(self.img_dict.values())[idx]
+                ann = list(self.ann_dict.values())[idx]
+
+                input_dict = dict(image=img, annotation=ann)
+        else:
+            input_dict = dict(
+                img_path=self.img_paths[idx],
+                ann_path=self.ann_paths[idx],
+                name=self.names[idx])
         return input_dict
 
     def _prepare_data(self, idx):
@@ -109,7 +136,10 @@ class BaseDataset(Dataset):
         return sample
 
     def __len__(self):
-        if self.random_sampling:
-            return len(self.img_paths) * self.repeat
+        if self.use_patch:
+            if self.random_sampling:
+                return len(self.img_paths) * self.repeat
+            else:
+                return len(self.infos)
         else:
-            return len(self.infos)
+            return len(self.img_paths)
